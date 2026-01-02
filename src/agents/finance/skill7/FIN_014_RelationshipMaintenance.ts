@@ -83,7 +83,7 @@ export const OutputSchema = z.object({
     executive_summary: z.string().describe("요약"),
     progress_section: z.object({
       headline: z.string(),
-      key_metrics: z.array(z.object({ label: z.string(); value: z.string() })),
+      key_metrics: z.array(z.object({ label: z.string(), value: z.string() })),
       narrative: z.string(),
     }),
     sponsor_benefits_section: z.object({

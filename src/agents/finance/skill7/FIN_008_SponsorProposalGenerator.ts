@@ -121,7 +121,7 @@ export const OutputSchema = z.object({
     audience_profile: z.object({
       overview: z.string(),
       demographics_summary: z.string(),
-      key_statistics: z.array(z.object({ label: z.string(); value: z.string() })),
+      key_statistics: z.array(z.object({ label: z.string(), value: z.string() })),
     }),
     sponsorship_opportunities: z.array(
       z.object({

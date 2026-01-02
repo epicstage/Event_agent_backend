@@ -104,7 +104,7 @@ export const OutputSchema = z.object({
     effective_cpm: z.number().describe("유효 CPM"),
     exposure_value: z.number().describe("노출 가치"),
     exposure_breakdown: z
-      .array(z.object({ channel: z.string(); impressions: z.number(); value: z.number() }))
+      .array(z.object({ channel: z.string(), impressions: z.number(), value: z.number() }))
       .describe("채널별 노출"),
   }),
   lead_analysis: z.object({
@@ -127,9 +127,9 @@ export const OutputSchema = z.object({
     .describe("전환 분석"),
   benchmark_comparison: z
     .object({
-      vs_avg_cpl: z.object({ value: z.number(); interpretation: z.string() }),
-      vs_avg_cpm: z.object({ value: z.number(); interpretation: z.string() }),
-      vs_avg_roi: z.object({ value: z.number(); interpretation: z.string() }),
+      vs_avg_cpl: z.object({ value: z.number(), interpretation: z.string() }),
+      vs_avg_cpm: z.object({ value: z.number(), interpretation: z.string() }),
+      vs_avg_roi: z.object({ value: z.number(), interpretation: z.string() }),
     })
     .optional()
     .describe("벤치마크 비교"),

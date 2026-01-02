@@ -128,7 +128,7 @@ const RISK_KEYWORDS: Record<string, { category: string; baseLevel: string }> = {
   payment: { category: "payment", baseLevel: "medium" },
   refund: { category: "payment", baseLevel: "medium" },
   exclusive: { category: "exclusivity", baseLevel: "high" },
-  non-compete: { category: "exclusivity", baseLevel: "high" },
+  "non-compete": { category: "exclusivity", baseLevel: "high" },
   compliance: { category: "compliance", baseLevel: "medium" },
   regulatory: { category: "compliance", baseLevel: "medium" },
 };

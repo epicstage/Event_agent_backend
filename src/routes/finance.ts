@@ -8,6 +8,7 @@
 
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
 import type { Env } from "../types";
 import {
   BudgetLineItem,
@@ -25,6 +26,7 @@ import {
   calcROI,
   calcCostPerAttendee,
 } from "../schemas/financial";
+import { executeAgent, listAgents, getAgent } from "../agents/finance/registry";
 
 // =============================================================================
 // ROUTER
@@ -771,6 +773,117 @@ finance.patch("/sponsors/:sponsor_id/status", async (c) => {
     .first();
 
   return c.json(updated);
+});
+
+// =============================================================================
+// AGENT ENDPOINTS
+// =============================================================================
+
+/**
+ * Agent Execute Request Schema
+ */
+const AgentExecuteRequestSchema = z.object({
+  taskId: z.string().regex(/^FIN-\d{3}$/, "Invalid task ID format (FIN-XXX)"),
+  input: z.record(z.any()),
+});
+
+/**
+ * POST /agents/execute
+ * AI 에이전트 실행
+ * CMP-IS Domain D: Financial Management (Skills 7, 8, 9)
+ */
+finance.post(
+  "/agents/execute",
+  zValidator("json", AgentExecuteRequestSchema),
+  async (c) => {
+    const { taskId, input } = c.req.valid("json");
+
+    try {
+      const result = await executeAgent(taskId, input);
+      return c.json({
+        success: true,
+        taskId,
+        result,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+
+      if (message.includes("not found")) {
+        return c.json(
+          {
+            success: false,
+            taskId,
+            error: message,
+          },
+          404
+        );
+      }
+
+      if (message.includes("validation") || message.includes("Validation")) {
+        return c.json(
+          {
+            success: false,
+            taskId,
+            error: message,
+          },
+          400
+        );
+      }
+
+      return c.json(
+        {
+          success: false,
+          taskId,
+          error: message,
+        },
+        500
+      );
+    }
+  }
+);
+
+/**
+ * GET /agents
+ * 등록된 에이전트 목록 조회
+ */
+finance.get("/agents", async (c) => {
+  const skill = c.req.query("skill");
+  const taskType = c.req.query("taskType");
+
+  let agents = listAgents();
+
+  if (skill) {
+    agents = agents.filter((a) => a.skill.toLowerCase().includes(skill.toLowerCase()));
+  }
+
+  if (taskType) {
+    agents = agents.filter((a) => a.taskType === taskType);
+  }
+
+  return c.json({
+    total: agents.length,
+    agents,
+  });
+});
+
+/**
+ * GET /agents/:taskId
+ * 특정 에이전트 상세 정보 조회
+ */
+finance.get("/agents/:taskId", async (c) => {
+  const taskId = c.req.param("taskId");
+  const agent = getAgent(taskId);
+
+  if (!agent) {
+    return c.json(
+      {
+        error: `Agent ${taskId} not found`,
+      },
+      404
+    );
+  }
+
+  return c.json(agent);
 });
 
 // =============================================================================
