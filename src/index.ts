@@ -14,6 +14,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import type { Env } from "./types";
 import finance from "./routes/finance";
+import strategy from "./routes/strategy";
 
 // =============================================================================
 // APP INITIALIZATION
@@ -46,6 +47,9 @@ app.use(
 // Finance Router (/finance/*)
 app.route("/finance", finance);
 
+// Strategy Router (/strategy/*)
+app.route("/strategy", strategy);
+
 // =============================================================================
 // ROOT ENDPOINTS
 // =============================================================================
@@ -57,9 +61,9 @@ app.route("/finance", finance);
 app.get("/", (c) => {
   return c.json({
     message: "Global Standard Event Agent API is Running",
-    version: "0.1.0",
+    version: "0.2.0",
     standards: ["CMP-IS", "EMBOK", "APEX"],
-    active_domains: ["Financial Management"],
+    active_domains: ["Financial Management", "Strategic Planning"],
     docs: "/docs",
   });
 });
@@ -71,8 +75,18 @@ app.get("/", (c) => {
 app.get("/health", (c) => {
   return c.json({
     status: "healthy",
-    api_version: "0.1.0",
+    api_version: "0.2.0",
     domains: {
+      strategic_planning: {
+        status: "active",
+        reference: "CMP-IS Domain A",
+        skills: [
+          "Skill 1: Goal Setting",
+          "Skill 2: Stakeholder Analysis",
+          "Skill 3: Risk Assessment",
+        ],
+        agents: ["STR-001", "STR-002", "STR-003"],
+      },
       financial_management: {
         status: "active",
         reference: "CMP-IS Domain D",
@@ -82,7 +96,6 @@ app.get("/health", (c) => {
           "Skill 9: Manage Monetary Transactions",
         ],
       },
-      strategic_planning: { status: "planned", reference: "CMP-IS Domain A" },
       project_management: { status: "planned", reference: "CMP-IS Domain B" },
       risk_management: { status: "planned", reference: "CMP-IS Domain C" },
       human_resources: { status: "planned", reference: "CMP-IS Domain E" },
