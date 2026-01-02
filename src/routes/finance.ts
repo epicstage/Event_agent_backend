@@ -26,7 +26,7 @@ import {
   calcROI,
   calcCostPerAttendee,
 } from "../schemas/financial";
-import { executeAgent, listAgents, getAgent } from "../agents/finance/registry";
+import { executeAgent, executeAgentWithLLM, listAgents, getAgent } from "../agents/finance/registry";
 
 // =============================================================================
 // ROUTER
@@ -885,6 +885,235 @@ finance.get("/agents/:taskId", async (c) => {
 
   return c.json(agent);
 });
+
+/**
+ * Agent Execute with LLM Request Schema
+ */
+const AgentExecuteWithLLMSchema = z.object({
+  taskId: z.string().regex(/^FIN-\d{3}$/, "Invalid task ID format (FIN-XXX)"),
+  input: z.record(z.any()),
+  sessionId: z.string().optional(), // 세션 ID (없으면 자동 생성)
+});
+
+/**
+ * POST /agents/execute-with-llm
+ * AI 에이전트 실행 + Cloudflare Workers AI (Llama 3.3) 보강
+ *
+ * 기능:
+ * - 로컬 로직 실행 후 LLM이 결과를 검토하고 AI 인사이트 제공
+ * - 세션 컨텍스트 (Short-term Memory) 주입
+ * - D1 interactions 테이블에 로깅
+ * - evolution_note로 AI 자기 학습
+ * - gap_detected로 시스템 한계 자가 진단
+ * - 반복 질문/불만 감지 및 기록
+ * - 사용자 선호도 캐싱
+ */
+finance.post(
+  "/agents/execute-with-llm",
+  zValidator("json", AgentExecuteWithLLMSchema),
+  async (c) => {
+    const { taskId, input, sessionId: inputSessionId } = c.req.valid("json");
+    const ai = c.env.AI;
+    const kv = c.env.KV;
+    const db = c.env.DB;
+
+    if (!ai) {
+      return c.json(
+        {
+          success: false,
+          taskId,
+          error: "Cloudflare AI binding not configured",
+        },
+        500
+      );
+    }
+
+    // 동적 import (세션/인터랙션/갭 모듈)
+    const {
+      getSessionContext,
+      addConversation,
+      buildShortTermMemoryPrompt,
+      generateSessionId,
+      getFrustrationLevel,
+    } = await import("../lib/session");
+    const { logInteraction } = await import("../lib/interactions");
+    const { logSystemGap, logRawConversation } = await import("../lib/gaps");
+
+    // 세션 ID 처리
+    const sessionId = inputSessionId || generateSessionId();
+
+    // 원본 사용자 입력 저장 (raw_conversations)
+    try {
+      await logRawConversation(db, sessionId, "user_input", JSON.stringify(input), {
+        taskId,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error("Raw conversation logging failed:", e);
+    }
+
+    // 세션 컨텍스트 로드 (Short-term Memory + User Preferences)
+    let sessionContext = null;
+    let shortTermMemory = "";
+    let userPreferences = undefined;
+    try {
+      sessionContext = await getSessionContext(kv, sessionId);
+      shortTermMemory = buildShortTermMemoryPrompt(sessionContext);
+      userPreferences = sessionContext?.preferences;
+    } catch (e) {
+      console.error("Session context load failed:", e);
+    }
+
+    try {
+      // executeAgentWithLLM에 shortTermMemory + userPreferences 전달
+      const result = await executeAgentWithLLM(taskId, input, ai, shortTermMemory, userPreferences);
+
+      // 세션에 대화 추가 (KV) + 반복 질문 감지
+      let isRepeatedQuestion = false;
+      let frustrationLevel: { level: "none" | "low" | "medium" | "high"; signals: any[] } = {
+        level: "none",
+        signals: [],
+      };
+      try {
+        const { context: updatedContext, isRepeated } = await addConversation(kv, sessionId, {
+          taskId,
+          input,
+          output: result.result,
+          aiInsights: result.ai_insights
+            ? {
+                analysis: result.ai_insights.analysis,
+                recommendations: result.ai_insights.recommendations,
+                confidence_score: result.ai_insights.confidence_score,
+              }
+            : undefined,
+        });
+        isRepeatedQuestion = isRepeated;
+        frustrationLevel = getFrustrationLevel(updatedContext);
+      } catch (e) {
+        console.error("Session update failed:", e);
+      }
+
+      // D1에 인터랙션 로깅
+      let interactionId: number | null = null;
+      try {
+        interactionId = await logInteraction(db, {
+          session_id: sessionId,
+          task_id: taskId,
+          user_query: JSON.stringify(input),
+          agent_output: JSON.stringify(result.result),
+          ai_insight: JSON.stringify(result.ai_insights || {}),
+          evolution_note: result.ai_insights?.evolution_note,
+        });
+      } catch (e) {
+        console.error("Interaction logging failed:", e);
+      }
+
+      // AI가 감지한 시스템 갭 기록
+      if (result.ai_insights?.gap_detected && interactionId) {
+        try {
+          await logSystemGap(db, {
+            interaction_id: interactionId,
+            gap_type: result.ai_insights.gap_detected.type,
+            severity: result.ai_insights.gap_detected.severity,
+            description: result.ai_insights.gap_detected.description,
+            context_data: JSON.stringify({ taskId, input }),
+            suggested_fix: result.ai_insights.gap_detected.suggested_fix,
+          });
+        } catch (e) {
+          console.error("Gap logging failed:", e);
+        }
+      }
+
+      // 반복 질문으로 인한 불만 신호 기록
+      if (isRepeatedQuestion && interactionId) {
+        try {
+          await logSystemGap(db, {
+            interaction_id: interactionId,
+            gap_type: "USER_FRUSTRATION",
+            severity: frustrationLevel.level === "high" ? "high" : "medium",
+            description: `User asked about ${taskId} repeatedly (detected as frustration signal)`,
+            context_data: JSON.stringify({
+              taskId,
+              frustrationLevel: frustrationLevel.level,
+              signalCount: frustrationLevel.signals.length,
+            }),
+            suggested_fix: "Review this task's responses for clarity and completeness",
+          });
+        } catch (e) {
+          console.error("Frustration gap logging failed:", e);
+        }
+      }
+
+      // 에이전트 응답 저장 (raw_conversations)
+      try {
+        await logRawConversation(db, sessionId, "agent_response", JSON.stringify(result), {
+          taskId,
+          interactionId,
+          hasGap: !!result.ai_insights?.gap_detected,
+          isRepeated: isRepeatedQuestion,
+        });
+      } catch (e) {
+        console.error("Raw response logging failed:", e);
+      }
+
+      return c.json({
+        success: true,
+        taskId,
+        sessionId,
+        interactionId,
+        frustration_detected: isRepeatedQuestion,
+        frustration_level: frustrationLevel.level,
+        ...result,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+
+      // 에러도 raw_conversations에 기록
+      try {
+        await logRawConversation(db, sessionId, "system_event", JSON.stringify({ error: message }), {
+          taskId,
+          type: "error",
+        });
+      } catch (e) {
+        console.error("Error logging failed:", e);
+      }
+
+      if (message.includes("not found")) {
+        return c.json(
+          {
+            success: false,
+            taskId,
+            sessionId,
+            error: message,
+          },
+          404
+        );
+      }
+
+      if (message.includes("validation") || message.includes("Validation")) {
+        return c.json(
+          {
+            success: false,
+            taskId,
+            sessionId,
+            error: message,
+          },
+          400
+        );
+      }
+
+      return c.json(
+        {
+          success: false,
+          taskId,
+          sessionId,
+          error: message,
+        },
+        500
+      );
+    }
+  }
+);
 
 // =============================================================================
 // UTILITY ENDPOINTS

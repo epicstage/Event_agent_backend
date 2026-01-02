@@ -16,6 +16,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+# Cloudflare Workers 환경 감지
+try:
+    from workers import WorkerEntrypoint
+    import asgi
+    IS_WORKERS = True
+except ImportError:
+    IS_WORKERS = False
+
 from routers.finance import router as finance_router
 
 
@@ -163,7 +171,18 @@ async def global_exception_handler(request, exc):
 
 
 # =============================================================================
-# RUN (for development)
+# CLOUDFLARE WORKERS ENTRYPOINT
+# =============================================================================
+
+if IS_WORKERS:
+    class Default(WorkerEntrypoint):
+        """Cloudflare Workers 진입점"""
+        async def fetch(self, request):
+            return await asgi.fetch(app, request, self.env)
+
+
+# =============================================================================
+# RUN (for local development)
 # =============================================================================
 
 if __name__ == "__main__":

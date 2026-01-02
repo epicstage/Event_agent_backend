@@ -31,6 +31,14 @@ const ask = new Hono<{ Bindings: Env }>();
 // =============================================================================
 
 /**
+ * Out-of-Scope 응답 메시지
+ */
+const OUT_OF_SCOPE_MESSAGE = {
+  ko: "저는 이벤트 전문 에이전트입니다. 해당 질문은 답변 범위를 벗어납니다. 이벤트 기획, 전략, 재무 관련 질문을 해주세요.",
+  en: "I am an Event Management AI Agent. This question is outside my scope. Please ask about event planning, strategy, or financial management.",
+};
+
+/**
  * POST /ask/route
  * 질문을 분석하여 적절한 에이전트 ID만 반환 (실행 없음)
  */
@@ -46,8 +54,25 @@ ask.post("/route", async (c) => {
     const router = createRouter(c.env.AI);
     const routeResult = await router.route({ question, context });
 
+    // Out-of-Scope 처리
+    if (routeResult.isOutOfScope || routeResult.domain === "out_of_scope") {
+      return c.json({
+        success: true,
+        isOutOfScope: true,
+        routing: routeResult,
+        message: OUT_OF_SCOPE_MESSAGE.ko,
+        message_en: OUT_OF_SCOPE_MESSAGE.en,
+        suggestions: [
+          "이벤트 목표를 설정해주세요",
+          "예산 구조를 설계해볼까요?",
+          "이해관계자를 분석해보시겠어요?",
+        ],
+      });
+    }
+
     return c.json({
       success: true,
+      isOutOfScope: false,
       routing: routeResult,
       next_action: {
         endpoint: routeResult.domain === "finance"
@@ -109,6 +134,32 @@ ask.post("/", async (c) => {
       },
     });
 
+    // 2.5. Out-of-Scope 처리 (에이전트 실행 전에 차단)
+    if (routeResult.isOutOfScope || routeResult.domain === "out_of_scope") {
+      const responseTime = Date.now() - startTime;
+      return c.json({
+        success: true,
+        sessionId,
+        question,
+        isOutOfScope: true,
+        message: OUT_OF_SCOPE_MESSAGE.ko,
+        message_en: OUT_OF_SCOPE_MESSAGE.en,
+        routing: {
+          domain: "out_of_scope",
+          confidence: routeResult.confidence,
+          reasoning: routeResult.reasoning,
+        },
+        suggestions: [
+          "이벤트 목표를 설정해주세요",
+          "예산 구조를 설계해볼까요?",
+          "이해관계자를 분석해보시겠어요?",
+        ],
+        metadata: {
+          response_time_ms: responseTime,
+        },
+      });
+    }
+
     // 3. 에이전트 실행
     let agentResult;
     const agentInput = {
@@ -124,7 +175,7 @@ ask.post("/", async (c) => {
         shortTermMemory,
         sessionContext?.preferences
       );
-    } else {
+    } else if (routeResult.domain === "strategy") {
       agentResult = await executeStrategyAgent(
         routeResult.taskId,
         agentInput,
@@ -132,6 +183,13 @@ ask.post("/", async (c) => {
         shortTermMemory,
         sessionContext?.preferences
       );
+    } else {
+      // Fallback - should not reach here due to out-of-scope check above
+      return c.json({
+        success: false,
+        error: "Unknown domain",
+        routing: routeResult,
+      }, 400);
     }
 
     // 4. 대화 기록 저장

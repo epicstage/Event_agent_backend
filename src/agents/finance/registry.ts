@@ -283,7 +283,7 @@ export function getAgentByCmpReference(
 }
 
 /**
- * 에이전트 실행
+ * 에이전트 실행 (로컬 로직만)
  */
 export async function executeAgent(
   taskId: string,
@@ -294,6 +294,177 @@ export async function executeAgent(
     throw new Error(`Agent not found: ${taskId}`);
   }
   return agent.execute(input);
+}
+
+/**
+ * AGENT_PERSONA 가져오기 (타입 안전)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getPersona(agent: any): string {
+  return agent.AGENT_PERSONA || agent.taskName || "Event Planning Agent";
+}
+
+/**
+ * AGENT_PERSONA 맵 (동적 import 대신 정적 매핑)
+ */
+const agentPersonas: Record<string, string> = {
+  "FIN-001": getPersona(FIN_001),
+  "FIN-002": getPersona(FIN_002),
+  "FIN-003": getPersona(FIN_003),
+  "FIN-004": getPersona(FIN_004),
+  "FIN-005": getPersona(FIN_005),
+  "FIN-006": getPersona(FIN_006),
+  "FIN-007": getPersona(FIN_007),
+  "FIN-008": getPersona(FIN_008),
+  "FIN-009": getPersona(FIN_009),
+  "FIN-010": getPersona(FIN_010),
+  "FIN-011": getPersona(FIN_011),
+  "FIN-012": getPersona(FIN_012),
+  "FIN-013": getPersona(FIN_013),
+  "FIN-014": getPersona(FIN_014),
+  "FIN-015": getPersona(FIN_015),
+  "FIN-016": getPersona(FIN_016),
+  "FIN-017": getPersona(FIN_017),
+  "FIN-018": getPersona(FIN_018),
+  "FIN-019": getPersona(FIN_019),
+  "FIN-020": getPersona(FIN_020),
+  "FIN-021": getPersona(FIN_021),
+  "FIN-022": getPersona(FIN_022),
+  "FIN-023": getPersona(FIN_023),
+  "FIN-024": getPersona(FIN_024),
+  "FIN-025": getPersona(FIN_025),
+  "FIN-026": getPersona(FIN_026),
+  "FIN-027": getPersona(FIN_027),
+  "FIN-028": getPersona(FIN_028),
+  "FIN-029": getPersona(FIN_029),
+  "FIN-030": getPersona(FIN_030),
+  "FIN-031": getPersona(FIN_031),
+  "FIN-032": getPersona(FIN_032),
+  "FIN-033": getPersona(FIN_033),
+  "FIN-034": getPersona(FIN_034),
+  "FIN-035": getPersona(FIN_035),
+  "FIN-036": getPersona(FIN_036),
+  "FIN-037": getPersona(FIN_037),
+  "FIN-038": getPersona(FIN_038),
+  "FIN-039": getPersona(FIN_039),
+  "FIN-040": getPersona(FIN_040),
+  "FIN-041": getPersona(FIN_041),
+  "FIN-042": getPersona(FIN_042),
+  "FIN-043": getPersona(FIN_043),
+  "FIN-044": getPersona(FIN_044),
+  "FIN-045": getPersona(FIN_045),
+  "FIN-046": getPersona(FIN_046),
+  "FIN-047": getPersona(FIN_047),
+  "FIN-048": getPersona(FIN_048),
+  "FIN-049": getPersona(FIN_049),
+  "FIN-050": getPersona(FIN_050),
+  "FIN-051": getPersona(FIN_051),
+  "FIN-052": getPersona(FIN_052),
+  "FIN-053": getPersona(FIN_053),
+  "FIN-054": getPersona(FIN_054),
+  "FIN-055": getPersona(FIN_055),
+  "FIN-056": getPersona(FIN_056),
+  "FIN-057": getPersona(FIN_057),
+  "FIN-058": getPersona(FIN_058),
+  "FIN-059": getPersona(FIN_059),
+  "FIN-060": getPersona(FIN_060),
+  "FIN-061": getPersona(FIN_061),
+  "FIN-062": getPersona(FIN_062),
+  "FIN-063": getPersona(FIN_063),
+  "FIN-064": getPersona(FIN_064),
+  "FIN-065": getPersona(FIN_065),
+  "FIN-066": getPersona(FIN_066),
+  "FIN-067": getPersona(FIN_067),
+  "FIN-068": getPersona(FIN_068),
+};
+
+/**
+ * 에이전트 실행 + Cloudflare Workers AI 보강
+ *
+ * 1. 로컬 로직 실행
+ * 2. Llama 3.3으로 결과 검토 및 보강
+ * 3. Short-term Memory 세션 컨텍스트 지원
+ */
+export async function executeAgentWithLLM(
+  taskId: string,
+  input: unknown,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ai: any,
+  shortTermMemory?: string, // 세션 컨텍스트 (최근 대화 요약)
+  userPreferences?: {
+    language?: string;
+    detail_level?: "brief" | "standard" | "detailed";
+    industry_focus?: string;
+    past_topics?: string[];
+  }
+): Promise<{
+  result: unknown;
+  ai_enhanced: boolean;
+  ai_insights?: {
+    analysis: string;
+    recommendations: string[];
+    risk_factors: string[];
+    confidence_score: number;
+    evolution_note?: string; // AI 자기 학습 메모
+    gap_detected?: {
+      type: "MISSING_FEAT" | "LOGIC_ERROR" | "USER_FRUSTRATION" | "DATA_GAP" | "PERF_ISSUE";
+      severity: "low" | "medium" | "high" | "critical";
+      description: string;
+      suggested_fix?: string;
+    };
+  };
+  ai_error?: string;
+}> {
+  const agent = getAgent(taskId);
+  if (!agent) {
+    throw new Error(`Agent not found: ${taskId}`);
+  }
+
+  // 1. 로컬 로직 실행
+  const localResult = await agent.execute(input);
+
+  // 2. AI 타입 에이전트만 LLM으로 보강
+  if (agent.taskType !== "AI") {
+    return {
+      result: localResult,
+      ai_enhanced: false,
+    };
+  }
+
+  // 3. Cloudflare Workers AI 연동 + Short-term Memory + User Preferences 주입
+  try {
+    const { createAIClient } = await import("../../lib/ai");
+    const aiClient = createAIClient(ai);
+
+    const persona = agentPersonas[taskId] || agent.skill;
+
+    const context = {
+      taskId: agent.taskId,
+      taskName: agent.taskName,
+      persona,
+      input,
+      localResult,
+      shortTermMemory, // 세션 컨텍스트 주입
+      userPreferences, // 사용자 선호도 주입
+    };
+
+    const enhanced = await aiClient.enhanceAgentResult(context);
+
+    return {
+      result: enhanced.enhanced_result || localResult,
+      ai_enhanced: true,
+      ai_insights: enhanced.ai_insights,
+    };
+  } catch (error) {
+    // AI 실패 시 로컬 결과 반환
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Cloudflare AI enhancement failed:", errorMessage);
+    return {
+      result: localResult,
+      ai_enhanced: false,
+      ai_error: errorMessage,
+    };
+  }
 }
 
 /**
