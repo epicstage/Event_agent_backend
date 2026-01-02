@@ -15,6 +15,7 @@ import { logger } from "hono/logger";
 import type { Env } from "./types";
 import finance from "./routes/finance";
 import strategy from "./routes/strategy";
+import ask from "./routes/ask";
 
 // =============================================================================
 // APP INITIALIZATION
@@ -50,6 +51,9 @@ app.route("/finance", finance);
 // Strategy Router (/strategy/*)
 app.route("/strategy", strategy);
 
+// Intelligent Ask Router (/ask/*)
+app.route("/ask", ask);
+
 // =============================================================================
 // ROOT ENDPOINTS
 // =============================================================================
@@ -61,9 +65,15 @@ app.route("/strategy", strategy);
 app.get("/", (c) => {
   return c.json({
     message: "Global Standard Event Agent API is Running",
-    version: "0.2.0",
+    version: "0.3.0",
     standards: ["CMP-IS", "EMBOK", "APEX"],
     active_domains: ["Financial Management", "Strategic Planning"],
+    features: ["Intelligent Router", "Session Memory", "Gap Detection"],
+    endpoints: {
+      ask: "/ask - Natural language routing & execution",
+      finance: "/finance/agents - Financial management agents",
+      strategy: "/strategy/agents - Strategic planning agents",
+    },
     docs: "/docs",
   });
 });
@@ -75,7 +85,7 @@ app.get("/", (c) => {
 app.get("/health", (c) => {
   return c.json({
     status: "healthy",
-    api_version: "0.2.0",
+    api_version: "0.3.0",
     domains: {
       strategic_planning: {
         status: "active",

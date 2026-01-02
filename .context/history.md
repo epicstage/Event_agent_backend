@@ -1,5 +1,71 @@
 # 작업 이력
 
+## 2026-01-02: 인터랙션 아카이빙 & 지능형 피드백 시스템 구축
+
+### 완료된 작업
+1. **D1 interactions 테이블**: `session_id`, `task_id`, `user_query`, `agent_output`, `ai_insight`, `user_feedback`, `evolution_note`, `created_at`
+2. **KV 세션 컨텍스트 캐싱**: `src/lib/session.ts` - 최근 10개 대화 저장, Short-term Memory 프롬프트 생성
+3. **인터랙션 로깅**: `src/lib/interactions.ts` - D1 기반 모든 LLM 요청 기록
+4. **ai.ts 프롬프트 튜닝**: Strict JSON 출력 + `evolution_note` 필드 추가
+5. **finance.ts 통합**: `execute-with-llm` 엔드포인트에 세션/인터랙션 로깅 연동
+
+### 응답 구조 변경
+```json
+{
+  "success": true,
+  "taskId": "FIN-001",
+  "sessionId": "sess_xxx",     // 새로 추가
+  "interactionId": 1,           // 새로 추가
+  "result": {...},
+  "ai_enhanced": true,
+  "ai_insights": {
+    "evolution_note": "..."     // 새로 추가
+  }
+}
+```
+
+### 배포 정보
+- Version: 5c0cb400-88d8-45bb-b7c8-b8e96cbb7321
+
+### 다음 작업
+- AI 인사이트 파싱 이슈 조사 (현재 fallback 응답 반환 중)
+- Lovable 연동
+
+---
+
+## 2026-01-02: Cloudflare Workers AI (Llama 3.3) 엔진 이식 완료
+
+### 완료된 작업
+- `wrangler.toml`에 `[ai]` 바인딩 추가
+- `src/lib/ai.ts` - Cloudflare Workers AI 클라이언트 구현 (Llama 3.3 70B)
+- `src/agents/finance/registry.ts` - `executeAgentWithLLM()` Cloudflare AI 연동
+- `src/routes/finance.ts` - `/agents/execute-with-llm` 엔드포인트 수정
+- `src/types.ts` - GEMINI_API_KEY 제거, AI 바인딩 추가
+- 기존 `gemini.ts` 삭제
+- Cloudflare Workers 배포 완료
+
+### 배포 정보
+- URL: https://event-agent-api.pd-302.workers.dev
+- Version: b6a14b51-83ed-457f-a5fc-36f951612bd6
+- Model: @cf/meta/llama-3.3-70b-instruct-fp8-fast
+
+### 테스트 결과
+- `ai_enhanced: true` 응답 확인
+- 지역 제한 없이 동작 확인
+
+---
+
+## 2026-01-02: Gemini LLM 엔진 이식 - 지역 제한 문제 발견 (해결됨)
+
+### 발견된 문제
+- **Gemini API 지역 제한**: `User location is not supported for the API use` 에러
+- Google AI Studio Free tier는 한국 리전에서 지원되지 않음
+
+### 해결
+- Cloudflare Workers AI (Llama 3.3)로 교체하여 해결
+
+---
+
 ## 2026-01-02 FIN-001 테스트 완료 & 구문 오류 수정
 
 **FIN-001 테스트 결과 (ALL PASS):**
@@ -217,3 +283,67 @@
 - 실제 AI 모델 통합
 - [2026-01-02 20:39:23] Edit: history.md
 - [2026-01-02 20:43:02] Edit: .gitignore
+- [2026-01-02 21:05:51] Edit: wrangler.toml
+- [2026-01-02 21:07:00] Edit: types.ts
+- [2026-01-02 21:08:09] Write: gemini.ts
+- [2026-01-02 21:10:54] Edit: registry.ts
+- [2026-01-02 21:11:35] Edit: finance.ts
+- [2026-01-02 21:12:08] Edit: finance.ts
+- [2026-01-02 21:13:30] Edit: registry.ts
+- [2026-01-02 21:22:52] Edit: gemini.ts
+- [2026-01-02 21:23:12] Edit: gemini.ts
+- [2026-01-02 21:23:33] Edit: gemini.ts
+- [2026-01-02 21:23:54] Edit: gemini.ts
+- [2026-01-02 21:24:16] Edit: gemini.ts
+- [2026-01-02 21:26:36] Edit: registry.ts
+- [2026-01-02 21:28:42] Edit: history.md
+- [2026-01-02 21:42:02] Edit: wrangler.toml
+- [2026-01-02 21:43:17] Write: ai.ts
+- [2026-01-02 21:43:58] Edit: types.ts
+- [2026-01-02 21:45:21] Edit: registry.ts
+- [2026-01-02 21:46:16] Edit: finance.ts
+- [2026-01-02 21:47:56] Edit: ai.ts
+- [2026-01-02 21:49:33] Edit: ai.ts
+- [2026-01-02 21:49:56] Edit: ai.ts
+- [2026-01-02 21:50:18] Edit: types.ts
+- [2026-01-02 21:54:12] Edit: history.md
+- [2026-01-02 22:04:04] Write: 001_interactions.sql
+- [2026-01-02 22:07:42] Write: session.ts
+- [2026-01-02 22:08:18] Write: interactions.ts
+- [2026-01-02 22:09:35] Edit: ai.ts
+- [2026-01-02 22:10:11] Edit: ai.ts
+- [2026-01-02 22:11:28] Edit: finance.ts
+- [2026-01-02 22:13:03] Edit: registry.ts
+- [2026-01-02 22:13:52] Edit: interactions.ts
+- [2026-01-02 22:19:35] Edit: history.md
+- [2026-01-02 22:21:18] Write: 002_system_gaps.sql
+- [2026-01-02 22:23:00] Write: gaps.ts
+- [2026-01-02 22:23:55] Edit: ai.ts
+- [2026-01-02 22:24:47] Edit: ai.ts
+- [2026-01-02 22:26:11] Edit: session.ts
+- [2026-01-02 22:26:52] Edit: session.ts
+- [2026-01-02 22:29:39] Edit: finance.ts
+- [2026-01-02 22:32:03] Edit: registry.ts
+- [2026-01-02 22:33:14] Edit: finance.ts
+- [2026-01-02 22:39:36] Write: current.md
+- [2026-01-02 22:46:55] Write: 003_strategy_tables.sql
+- [2026-01-02 22:49:24] Write: STR_001_GoalSetting.ts
+- [2026-01-02 22:50:43] Write: STR_002_StakeholderAnalysis.ts
+- [2026-01-02 22:52:16] Write: STR_003_RiskIdentification.ts
+- [2026-01-02 22:53:02] Write: registry.ts
+- [2026-01-02 22:54:49] Write: strategy.ts
+- [2026-01-02 22:56:52] Edit: index.ts
+- [2026-01-02 22:57:13] Edit: index.ts
+- [2026-01-02 22:57:35] Edit: index.ts
+- [2026-01-02 22:58:02] Edit: index.ts
+- [2026-01-02 23:05:43] Write: current.md
+- [2026-01-02 23:12:52] Write: router.ts
+- [2026-01-02 23:14:44] Write: ask.ts
+- [2026-01-02 23:15:34] Edit: index.ts
+- [2026-01-02 23:15:56] Edit: index.ts
+- [2026-01-02 23:16:20] Edit: index.ts
+- [2026-01-02 23:16:43] Edit: index.ts
+- [2026-01-02 23:17:38] Edit: ask.ts
+- [2026-01-02 23:18:00] Edit: ask.ts
+- [2026-01-02 23:23:30] Write: current.md
+- [2026-01-02 23:27:38] Edit: .gitignore
