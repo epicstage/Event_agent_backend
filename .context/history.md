@@ -1,0 +1,30 @@
+# 작업 이력
+
+- [2026-01-02 10:00:30] Write: 01_API_Overview.md
+- [2026-01-02 10:00:45] Write: 02_RFP_Objects_JSON.md
+- [2026-01-02 10:01:00] Write: 01_API_Overview.md
+- [2026-01-02 10:01:15] Write: 02_Event_Object_JSON.md
+- [2026-01-02 10:01:31] Write: 03_Attendee_Object_JSON.md
+- [2026-01-02 10:03:40] Write: 01_APEX_Overview.md
+- [2026-01-02 10:03:55] Write: 02_Post_Event_Report_Template.md
+- [2026-01-02 10:04:10] Write: 03_APEX_Glossary_Excerpt.md
+- [2026-01-02 10:04:25] Write: 01_EMBOK_Overview.md
+- [2026-01-02 10:04:41] Write: 02_EMBOK_5x5_Matrix.md
+- [2026-01-02 10:05:26] Write: README.md
+- [2026-01-02 11:22:16] Write: 03_Budget_Session_Attendee_Schema.md
+- [2026-01-02 11:22:32] Write: 04_Order_Object_Schema.md
+- [2026-01-02 11:22:47] Write: 04_APEX_Templates_Links.md
+- [2026-01-02 11:23:02] Write: 03_EMBOK_Phases_Processes.md
+- [2026-01-02 11:24:52] Write: 04_EMBOK_Domain_Taxonomy.md
+- [2026-01-02 11:25:07] Write: PAID_RESOURCES.md
+- [2026-01-02 11:26:25] Write: README.md
+- [2026-01-02 12:08:48] Edit: PAID_RESOURCES.md
+- [2026-01-02 12:09:13] Edit: PAID_RESOURCES.md
+- [2026-01-02 12:39:01] Write: 01_financial_tasks.md
+- [2026-01-02 12:45:26] Write: financial.py
+- [2026-01-02 12:50:07] Write: __init__.py
+- [2026-01-02 12:50:22] Write: __init__.py
+- [2026-01-02 12:51:56] Write: finance.py
+- [2026-01-02 12:53:06] Write: main.py
+- [2026-01-02 12:53:52] Write: requirements.txt
+- [2026-01-02 13:42:00] Write: .gitignore

@@ -1,0 +1,14 @@
+# Event Agent API Dependencies
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Data Validation
+pydantic>=2.5.0
+
+# HTTP Client (for future API integrations)
+httpx>=0.26.0
+
+# Development
+python-dotenv>=1.0.0
