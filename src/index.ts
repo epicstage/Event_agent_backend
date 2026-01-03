@@ -15,10 +15,21 @@ import { logger } from "hono/logger";
 import type { Env } from "./types";
 import finance from "./routes/finance";
 import strategy from "./routes/strategy";
+import project from "./routes/project";
+import marketing from "./routes/marketing";
+import operations from "./routes/operations";
+import hr from "./routes/hr";
+import meetings from "./routes/meetings";
 import ask from "./routes/ask";
+import system from "./routes/system";
 import { IntelligentRouter } from "./lib/router";
 import { listAgents as listFinanceAgents } from "./agents/finance/registry";
 import { listAgents as listStrategyAgents } from "./agents/strategy/registry";
+import { listAgents as listProjectAgents } from "./agents/project/registry";
+import { listMarketingAgents } from "./agents/marketing/registry";
+import { listOperationsAgents } from "./agents/operations/registry";
+import { listHRAgents } from "./agents/hr/registry";
+import { listMeetingsAgents } from "./agents/meetings/registry";
 
 // =============================================================================
 // APP INITIALIZATION
@@ -54,8 +65,26 @@ app.route("/finance", finance);
 // Strategy Router (/strategy/*)
 app.route("/strategy", strategy);
 
+// Project Router (/project/*)
+app.route("/project", project);
+
+// Marketing Router (/marketing/*)
+app.route("/marketing", marketing);
+
+// Operations Router (/operations/*)
+app.route("/operations", operations);
+
+// HR Router (/hr/*)
+app.route("/hr", hr);
+
+// Meetings Router (/meetings/*)
+app.route("/meetings", meetings);
+
 // Intelligent Ask Router (/ask/*)
 app.route("/ask", ask);
+
+// System Admin Router (/system/*) - 관리자 전용
+app.route("/system", system);
 
 // =============================================================================
 // ROOT ENDPOINTS
@@ -68,18 +97,32 @@ app.route("/ask", ask);
 app.get("/", (c) => {
   return c.json({
     message: "Global Standard Event Agent API is Running",
-    version: "0.3.0",
+    version: "0.8.0",
     standards: ["CMP-IS", "EMBOK", "APEX"],
-    active_domains: ["Financial Management", "Strategic Planning"],
-    features: ["Intelligent Router", "Session Memory", "Gap Detection"],
+    active_domains: ["Strategic Planning", "Project Management", "Marketing Management", "Financial Management", "Operations Management", "Human Resources"],
+    features: ["Intelligent Router", "Session Memory", "Gap Detection", "Agent Orchestration", "Knowledge Learning"],
     endpoints: {
       ask: "/ask - Natural language routing & execution",
-      finance: "/finance/agents - Financial management agents",
       strategy: "/strategy/agents - Strategic planning agents",
+      project: "/project/agents - Project management agents",
+      marketing: "/marketing/agents - Marketing management agents",
+      finance: "/finance/agents - Financial management agents",
+      operations: "/operations/agents - Operations management agents",
+      hr: "/hr/agents - Human resources agents",
+      system: "/system - Admin orchestration & learning system",
     },
     docs: "/docs",
   });
 });
+
+// 시스템 에이전트 정보 (SYS-001 ~ SYS-005)
+const SYSTEM_AGENTS = [
+  { id: "SYS-001", name: "Document Analyzer", taskType: "AI" as const },
+  { id: "SYS-002", name: "Consistency Checker", taskType: "AI" as const },
+  { id: "SYS-003", name: "Performance Monitor", taskType: "AI" as const },
+  { id: "SYS-004", name: "Knowledge Integrator", taskType: "AI" as const },
+  { id: "SYS-005", name: "Web Searcher", taskType: "AI" as const },
+];
 
 /**
  * GET /health
@@ -88,11 +131,17 @@ app.get("/", (c) => {
 app.get("/health", (c) => {
   const financeAgents = listFinanceAgents();
   const strategyAgents = listStrategyAgents({});
+  const projectAgents = listProjectAgents();
+  const marketingAgents = listMarketingAgents();
+  const operationsAgents = listOperationsAgents();
+  const hrAgents = listHRAgents();
+  const meetingsAgentsInfo = listMeetingsAgents();
+  const systemAgentCount = SYSTEM_AGENTS.length;
 
   return c.json({
     status: "healthy",
-    api_version: "0.3.0",
-    total_agents: financeAgents.length + strategyAgents.length,
+    api_version: "0.8.1",
+    total_agents: financeAgents.length + strategyAgents.length + projectAgents.length + marketingAgents.length + operationsAgents.length + hrAgents.length + meetingsAgentsInfo.length + systemAgentCount,
     domains: {
       strategic_planning: {
         status: "active",
@@ -105,6 +154,24 @@ app.get("/health", (c) => {
           "Skill 4: Strategic Alignment",
         ],
       },
+      project_management: {
+        status: "active",
+        reference: "CMP-IS Domain B",
+        agent_count: projectAgents.length,
+        skills: [
+          "Skill 5: Plan Project",
+          "Skill 6: Manage Project",
+        ],
+      },
+      marketing_management: {
+        status: "active",
+        reference: "CMP-IS Domain C",
+        agent_count: marketingAgents.length,
+        skills: [
+          "Skill 7: Plan Marketing",
+          "Skill 8: Execute Marketing",
+        ],
+      },
       financial_management: {
         status: "active",
         reference: "CMP-IS Domain D",
@@ -115,9 +182,39 @@ app.get("/health", (c) => {
           "Skill 9: Manage Monetary Transactions",
         ],
       },
-      project_management: { status: "planned", reference: "CMP-IS Domain B" },
-      risk_management: { status: "planned", reference: "CMP-IS Domain C" },
-      human_resources: { status: "planned", reference: "CMP-IS Domain E" },
+      operations_management: {
+        status: "active",
+        reference: "CMP-IS Domain E",
+        agent_count: operationsAgents.length,
+        skills: [
+          "Skill 9: Site Management",
+          "Skill 10: Logistics Management",
+        ],
+      },
+      human_resources: {
+        status: "active",
+        reference: "CMP-IS Domain F",
+        agent_count: hrAgents.length,
+        skills: [
+          "Skill 11: HR Planning",
+          "Skill 12: HR Management",
+        ],
+      },
+      meetings_contents: {
+        status: "active",
+        reference: "CMP-IS Domain G",
+        agent_count: meetingsAgentsInfo.length,
+        skills: [
+          "Skill 13: Program Design",
+          "Skill 14: Speaker & Content Management",
+        ],
+      },
+      system: {
+        status: "active",
+        reference: "System Orchestration",
+        agent_count: systemAgentCount,
+        agents: SYSTEM_AGENTS.map((a) => ({ id: a.id, name: a.name })),
+      },
     },
   });
 });
@@ -129,6 +226,11 @@ app.get("/health", (c) => {
 app.get("/system/stats", (c) => {
   const financeAgents = listFinanceAgents();
   const strategyAgents = listStrategyAgents({});
+  const projectAgents = listProjectAgents();
+  const marketingAgents = listMarketingAgents();
+  const operationsAgents = listOperationsAgents();
+  const hrAgents = listHRAgents();
+  const meetingsAgentsInfo = listMeetingsAgents();
   const routerStats = IntelligentRouter.getAgentStats();
 
   // 타입별 분류
@@ -142,12 +244,60 @@ app.get("/system/stats", (c) => {
     strategyByType[agent.taskType as keyof typeof strategyByType]++;
   }
 
+  const projectByType = { AI: 0, Human: 0, Hybrid: 0 };
+  for (const agent of projectAgents) {
+    projectByType[agent.taskType as keyof typeof projectByType]++;
+  }
+
+  const marketingByType = { AI: 0, Human: 0, Hybrid: 0 };
+  for (const agent of marketingAgents) {
+    marketingByType[agent.taskType as keyof typeof marketingByType]++;
+  }
+
+  const operationsByType = { AI: 0, Human: 0, Hybrid: 0 };
+  for (const agent of operationsAgents) {
+    operationsByType[agent.taskType as keyof typeof operationsByType]++;
+  }
+
+  const hrByType = { AI: 0, Human: 0, Hybrid: 0 };
+  for (const agent of hrAgents) {
+    hrByType[agent.taskType as keyof typeof hrByType]++;
+  }
+
+  const meetingsByType = { AI: 0, Human: 0, Hybrid: 0 };
+  for (const agent of meetingsAgentsInfo) {
+    meetingsByType[agent.taskType as keyof typeof meetingsByType]++;
+  }
+
+  const systemByType = { AI: SYSTEM_AGENTS.length, Human: 0, Hybrid: 0 };
+
   return c.json({
     success: true,
     timestamp: new Date().toISOString(),
-    total_agents: financeAgents.length + strategyAgents.length,
+    total_agents: financeAgents.length + strategyAgents.length + projectAgents.length + marketingAgents.length + operationsAgents.length + hrAgents.length + meetingsAgentsInfo.length + SYSTEM_AGENTS.length,
     router_catalog_count: routerStats.total,
     domains: {
+      strategy: {
+        code: "A",
+        name: "Strategic Planning",
+        total: strategyAgents.length,
+        by_type: strategyByType,
+        skills: ["Skill 1", "Skill 2", "Skill 3", "Skill 4"],
+      },
+      project: {
+        code: "B",
+        name: "Project Management",
+        total: projectAgents.length,
+        by_type: projectByType,
+        skills: ["Skill 5", "Skill 6"],
+      },
+      marketing: {
+        code: "C",
+        name: "Marketing Management",
+        total: marketingAgents.length,
+        by_type: marketingByType,
+        skills: ["Skill 7", "Skill 8"],
+      },
       finance: {
         code: "D",
         name: "Financial Management",
@@ -155,12 +305,33 @@ app.get("/system/stats", (c) => {
         by_type: financeByType,
         skills: ["Skill 7", "Skill 8", "Skill 9"],
       },
-      strategy: {
-        code: "A",
-        name: "Strategic Planning",
-        total: strategyAgents.length,
-        by_type: strategyByType,
-        skills: ["Skill 1", "Skill 2", "Skill 3", "Skill 4"],
+      operations: {
+        code: "E",
+        name: "Operations Management",
+        total: operationsAgents.length,
+        by_type: operationsByType,
+        skills: ["Skill 9", "Skill 10"],
+      },
+      hr: {
+        code: "F",
+        name: "Human Resources",
+        total: hrAgents.length,
+        by_type: hrByType,
+        skills: ["Skill 11", "Skill 12"],
+      },
+      meetings: {
+        code: "G",
+        name: "Meetings & Contents",
+        total: meetingsAgentsInfo.length,
+        by_type: meetingsByType,
+        skills: ["Skill 13", "Skill 14"],
+      },
+      system: {
+        code: "SYS",
+        name: "System Orchestration",
+        total: SYSTEM_AGENTS.length,
+        by_type: systemByType,
+        agents: SYSTEM_AGENTS.map((a) => ({ id: a.id, name: a.name })),
       },
     },
     features: {

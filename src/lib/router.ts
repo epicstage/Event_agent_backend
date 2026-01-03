@@ -4,7 +4,7 @@
  * Cloudflare Workers AI를 사용한 지능형 에이전트 라우터.
  * - 사용자 질문을 분석하여 가장 적합한 에이전트 선택
  * - Intent 기반 라우팅 (키워드 매칭 아님)
- * - FIN-001~068 (68개) + STR-001~054 (54개) 총 122개 에이전트 지원
+ * - STR-001~054 (54개) + PRJ-001~040 (40개) + MKT-001~040 (40개) + FIN-001~068 (68개) + OPS-001~040 (40개) + HR-001~040 (40개) + MTG-001~040 (40개) = 총 322개 에이전트 지원
  */
 
 // =============================================================================
@@ -22,17 +22,40 @@ export interface RouterInput {
 
 export interface RouterOutput {
   taskId: string;
-  domain: "finance" | "strategy" | "out_of_scope";
+  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "out_of_scope";
   confidence: number;
   reasoning: string;
   suggested_input?: Record<string, unknown>;
   isOutOfScope?: boolean;
 }
 
+// 복합 쿼리 지원을 위한 ExecutionPlan
+export interface ExecutionStep {
+  stepNumber: number;
+  taskId: string;
+  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings";
+  purpose: string;
+  dependsOn: number[]; // 의존하는 이전 step 번호들
+  inputMapping?: Record<string, string>; // 이전 step 출력에서 가져올 필드 매핑
+}
+
+export interface ExecutionPlan {
+  planId: string;
+  isComplex: boolean;
+  steps: ExecutionStep[];
+  totalSteps: number;
+  reasoning: string;
+  estimatedComplexity: "simple" | "moderate" | "complex";
+}
+
+export interface ComplexRouterOutput extends RouterOutput {
+  executionPlan?: ExecutionPlan;
+}
+
 export interface AgentMetadata {
   taskId: string;
   taskName: string;
-  domain: "finance" | "strategy";
+  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings";
   keywords: string[];
   intentPatterns: string[];
 }
@@ -714,6 +737,1426 @@ const AGENT_CATALOG: AgentMetadata[] = [
     keywords: ["재무", "보고", "report", "리포트", "보고서"],
     intentPatterns: ["재무 보고서가 필요하다", "재정 현황 보고"],
   },
+
+  // ============ PROJECT DOMAIN - Skill 5: Plan Project (PRJ-001~013) ============
+  {
+    taskId: "PRJ-001",
+    taskName: "프로젝트 일정 수립",
+    domain: "project",
+    keywords: ["일정", "스케줄", "schedule", "WBS", "타임라인", "timeline"],
+    intentPatterns: ["일정을 수립하고 싶다", "프로젝트 스케줄이 필요하다"],
+  },
+  {
+    taskId: "PRJ-002",
+    taskName: "자원 계획",
+    domain: "project",
+    keywords: ["자원", "리소스", "resource", "인력", "배정", "할당"],
+    intentPatterns: ["자원을 계획하고 싶다", "필요한 인력이 몇 명인가"],
+  },
+  {
+    taskId: "PRJ-003",
+    taskName: "범위 정의",
+    domain: "project",
+    keywords: ["범위", "scope", "포함", "제외", "경계"],
+    intentPatterns: ["프로젝트 범위를 정의하고 싶다", "무엇이 포함되나"],
+  },
+  {
+    taskId: "PRJ-004",
+    taskName: "산출물 정의",
+    domain: "project",
+    keywords: ["산출물", "deliverable", "결과물", "성과물"],
+    intentPatterns: ["산출물을 정의하고 싶다", "무엇을 만들어야 하나"],
+  },
+  {
+    taskId: "PRJ-005",
+    taskName: "마일스톤 계획",
+    domain: "project",
+    keywords: ["마일스톤", "milestone", "이정표", "체크포인트"],
+    intentPatterns: ["마일스톤을 설정하고 싶다", "중간 점검 시점"],
+  },
+  {
+    taskId: "PRJ-006",
+    taskName: "의존성 분석",
+    domain: "project",
+    keywords: ["의존성", "dependency", "선행", "후행", "순서"],
+    intentPatterns: ["작업 간 의존성을 분석하고 싶다", "무엇을 먼저 해야 하나"],
+  },
+  {
+    taskId: "PRJ-007",
+    taskName: "WBS 생성",
+    domain: "project",
+    keywords: ["WBS", "작업분해", "work breakdown", "분해"],
+    intentPatterns: ["WBS를 만들고 싶다", "작업을 분해하고 싶다"],
+  },
+  {
+    taskId: "PRJ-008",
+    taskName: "크리티컬 패스 분석",
+    domain: "project",
+    keywords: ["크리티컬 패스", "critical path", "CP", "임계 경로"],
+    intentPatterns: ["크리티컬 패스가 뭔가", "가장 긴 경로"],
+  },
+  {
+    taskId: "PRJ-009",
+    taskName: "프로젝트 차터",
+    domain: "project",
+    keywords: ["차터", "charter", "헌장", "프로젝트 정의"],
+    intentPatterns: ["프로젝트 차터가 필요하다", "프로젝트를 정의하고 싶다"],
+  },
+  {
+    taskId: "PRJ-010",
+    taskName: "역할 책임 정의",
+    domain: "project",
+    keywords: ["역할", "책임", "RACI", "담당자", "role"],
+    intentPatterns: ["역할을 정의하고 싶다", "누가 뭘 하나"],
+  },
+  {
+    taskId: "PRJ-011",
+    taskName: "커뮤니케이션 계획",
+    domain: "project",
+    keywords: ["커뮤니케이션", "communication", "소통", "보고 체계"],
+    intentPatterns: ["커뮤니케이션 계획이 필요하다", "어떻게 소통하나"],
+  },
+  {
+    taskId: "PRJ-012",
+    taskName: "품질 계획",
+    domain: "project",
+    keywords: ["품질", "quality", "QA", "검수", "기준"],
+    intentPatterns: ["품질 계획이 필요하다", "품질 기준이 뭔가"],
+  },
+  {
+    taskId: "PRJ-013",
+    taskName: "조달 계획",
+    domain: "project",
+    keywords: ["조달", "procurement", "구매", "계약", "공급"],
+    intentPatterns: ["조달 계획이 필요하다", "무엇을 구매해야 하나"],
+  },
+
+  // ============ PROJECT DOMAIN - Skill 6: Manage Project (PRJ-014~040) ============
+  {
+    taskId: "PRJ-014",
+    taskName: "일정 모니터링",
+    domain: "project",
+    keywords: ["일정 추적", "진행", "지연", "delay", "모니터링"],
+    intentPatterns: ["일정이 어떻게 되고 있나", "지연이 있나"],
+  },
+  {
+    taskId: "PRJ-015",
+    taskName: "자원 모니터링",
+    domain: "project",
+    keywords: ["자원 추적", "사용량", "가용", "utilization"],
+    intentPatterns: ["자원 사용 현황이 어떤가", "누가 바쁜가"],
+  },
+  {
+    taskId: "PRJ-016",
+    taskName: "범위 관리",
+    domain: "project",
+    keywords: ["범위 변경", "scope change", "변경 요청", "추가"],
+    intentPatterns: ["범위가 변경되었다", "새로운 요청이 들어왔다"],
+  },
+  {
+    taskId: "PRJ-017",
+    taskName: "이슈 관리",
+    domain: "project",
+    keywords: ["이슈", "issue", "문제", "해결", "트래킹"],
+    intentPatterns: ["이슈가 발생했다", "문제를 추적하고 싶다"],
+  },
+  {
+    taskId: "PRJ-018",
+    taskName: "변경 관리",
+    domain: "project",
+    keywords: ["변경", "change", "요청", "승인", "관리"],
+    intentPatterns: ["변경을 관리하고 싶다", "변경 요청 처리"],
+  },
+  {
+    taskId: "PRJ-019",
+    taskName: "진척도 보고",
+    domain: "project",
+    keywords: ["진척도", "progress", "상태", "현황", "보고"],
+    intentPatterns: ["진척도를 보고하고 싶다", "현재 상태가 어떤가"],
+  },
+  {
+    taskId: "PRJ-020",
+    taskName: "EVM 분석",
+    domain: "project",
+    keywords: ["EVM", "earned value", "SPI", "CPI", "가치"],
+    intentPatterns: ["EVM 분석이 필요하다", "SPI/CPI가 어떤가"],
+  },
+  {
+    taskId: "PRJ-021",
+    taskName: "리스크 대응",
+    domain: "project",
+    keywords: ["리스크 대응", "위험 처리", "완화", "회피"],
+    intentPatterns: ["리스크에 대응하고 싶다", "위험이 현실화되었다"],
+  },
+  {
+    taskId: "PRJ-022",
+    taskName: "프로젝트 보고서",
+    domain: "project",
+    keywords: ["프로젝트 보고서", "주간 보고", "월간 보고", "status report"],
+    intentPatterns: ["프로젝트 보고서가 필요하다", "주간 보고를 작성하고 싶다"],
+  },
+  {
+    taskId: "PRJ-023",
+    taskName: "성과 보고",
+    domain: "project",
+    keywords: ["성과", "performance", "KPI", "지표", "달성"],
+    intentPatterns: ["성과를 보고하고 싶다", "KPI 달성 현황"],
+  },
+  {
+    taskId: "PRJ-024",
+    taskName: "교훈 수집",
+    domain: "project",
+    keywords: ["교훈", "lessons learned", "배운 점", "경험"],
+    intentPatterns: ["교훈을 수집하고 싶다", "뭘 배웠나"],
+  },
+  {
+    taskId: "PRJ-025",
+    taskName: "팀 조율",
+    domain: "project",
+    keywords: ["팀", "조율", "coordination", "협력", "워크로드"],
+    intentPatterns: ["팀을 조율하고 싶다", "업무 분담이 필요하다"],
+  },
+  {
+    taskId: "PRJ-026",
+    taskName: "갈등 해결",
+    domain: "project",
+    keywords: ["갈등", "conflict", "충돌", "팀 문제"],
+    intentPatterns: ["팀 갈등이 있다", "갈등을 해결하고 싶다"],
+  },
+  {
+    taskId: "PRJ-027",
+    taskName: "회의 관리",
+    domain: "project",
+    keywords: ["회의", "meeting", "미팅", "아젠다", "회의록"],
+    intentPatterns: ["회의를 준비하고 싶다", "미팅 아젠다가 필요하다"],
+  },
+  {
+    taskId: "PRJ-028",
+    taskName: "의사결정 기록",
+    domain: "project",
+    keywords: ["의사결정", "decision", "결정", "로그", "기록"],
+    intentPatterns: ["결정 사항을 기록하고 싶다", "어떤 결정이 있었나"],
+  },
+  {
+    taskId: "PRJ-029",
+    taskName: "지식 공유",
+    domain: "project",
+    keywords: ["지식", "knowledge", "공유", "저장소", "repository"],
+    intentPatterns: ["지식을 공유하고 싶다", "자료를 정리하고 싶다"],
+  },
+  {
+    taskId: "PRJ-030",
+    taskName: "팀 역량 개발",
+    domain: "project",
+    keywords: ["역량", "skill", "교육", "training", "개발"],
+    intentPatterns: ["팀 역량을 높이고 싶다", "교육이 필요하다"],
+  },
+  {
+    taskId: "PRJ-031",
+    taskName: "인수인계 관리",
+    domain: "project",
+    keywords: ["인수인계", "handover", "전달", "이관"],
+    intentPatterns: ["인수인계를 준비하고 싶다", "전달할 것이 뭔가"],
+  },
+  {
+    taskId: "PRJ-032",
+    taskName: "계약 종료",
+    domain: "project",
+    keywords: ["계약 종료", "contract close", "완료", "정산"],
+    intentPatterns: ["계약을 종료하고 싶다", "벤더 정산이 필요하다"],
+  },
+  {
+    taskId: "PRJ-033",
+    taskName: "최종 보고서",
+    domain: "project",
+    keywords: ["최종 보고서", "final report", "종합", "결과"],
+    intentPatterns: ["최종 보고서가 필요하다", "프로젝트 결과를 정리하고 싶다"],
+  },
+  {
+    taskId: "PRJ-034",
+    taskName: "문서 보관",
+    domain: "project",
+    keywords: ["문서", "보관", "archive", "아카이브", "저장"],
+    intentPatterns: ["문서를 보관하고 싶다", "자료를 아카이브하고 싶다"],
+  },
+  {
+    taskId: "PRJ-035",
+    taskName: "사후 평가",
+    domain: "project",
+    keywords: ["사후 평가", "post-event", "평가", "분석", "SWOT"],
+    intentPatterns: ["사후 평가를 하고 싶다", "이벤트 평가가 필요하다"],
+  },
+  {
+    taskId: "PRJ-036",
+    taskName: "자원 해제",
+    domain: "project",
+    keywords: ["자원 해제", "release", "반납", "종료"],
+    intentPatterns: ["자원을 해제하고 싶다", "팀을 해산해야 한다"],
+  },
+  {
+    taskId: "PRJ-037",
+    taskName: "이해관계자 승인",
+    domain: "project",
+    keywords: ["승인", "sign-off", "사인오프", "완료 확인"],
+    intentPatterns: ["승인을 받고 싶다", "완료 확인이 필요하다"],
+  },
+  {
+    taskId: "PRJ-038",
+    taskName: "재무 마감",
+    domain: "project",
+    keywords: ["재무 마감", "financial close", "정산", "결산"],
+    intentPatterns: ["재무를 마감하고 싶다", "예산 정산이 필요하다"],
+  },
+  {
+    taskId: "PRJ-039",
+    taskName: "축하 및 인정",
+    domain: "project",
+    keywords: ["축하", "celebration", "인정", "recognition", "포상"],
+    intentPatterns: ["팀을 축하하고 싶다", "성과를 인정하고 싶다"],
+  },
+  {
+    taskId: "PRJ-040",
+    taskName: "프로젝트 종료",
+    domain: "project",
+    keywords: ["프로젝트 종료", "project close", "클로징", "마무리"],
+    intentPatterns: ["프로젝트를 종료하고 싶다", "공식적으로 끝내고 싶다"],
+  },
+
+  // ============ MARKETING DOMAIN - Skill 7: Plan Marketing (MKT-001~015) ============
+  {
+    taskId: "MKT-001",
+    taskName: "시장 조사",
+    domain: "marketing",
+    keywords: ["시장 조사", "market research", "리서치", "분석", "조사"],
+    intentPatterns: ["시장 조사가 필요하다", "시장을 분석하고 싶다"],
+  },
+  {
+    taskId: "MKT-002",
+    taskName: "타겟 오디언스 정의",
+    domain: "marketing",
+    keywords: ["타겟", "오디언스", "target audience", "대상자", "고객층"],
+    intentPatterns: ["타겟을 정하고 싶다", "누구를 대상으로 하나"],
+  },
+  {
+    taskId: "MKT-003",
+    taskName: "경쟁사 분석",
+    domain: "marketing",
+    keywords: ["경쟁사", "competitor", "경쟁 분석", "벤치마킹"],
+    intentPatterns: ["경쟁사를 분석하고 싶다", "경쟁 이벤트가 뭐가 있나"],
+  },
+  {
+    taskId: "MKT-004",
+    taskName: "브랜드 전략",
+    domain: "marketing",
+    keywords: ["브랜드", "brand", "아이덴티티", "포지셔닝"],
+    intentPatterns: ["브랜드 전략이 필요하다", "브랜드를 어떻게 할까"],
+  },
+  {
+    taskId: "MKT-005",
+    taskName: "채널 전략",
+    domain: "marketing",
+    keywords: ["채널", "channel", "마케팅 채널", "홍보 채널"],
+    intentPatterns: ["어떤 채널을 사용할까", "홍보 채널 전략"],
+  },
+  {
+    taskId: "MKT-006",
+    taskName: "컨텐츠 전략",
+    domain: "marketing",
+    keywords: ["컨텐츠", "content", "콘텐츠 전략", "스토리텔링"],
+    intentPatterns: ["컨텐츠 전략이 필요하다", "어떤 컨텐츠를 만들까"],
+  },
+  {
+    taskId: "MKT-007",
+    taskName: "캠페인 전략",
+    domain: "marketing",
+    keywords: ["캠페인", "campaign", "마케팅 캠페인", "프로모션"],
+    intentPatterns: ["캠페인을 기획하고 싶다", "마케팅 캠페인 전략"],
+  },
+  {
+    taskId: "MKT-008",
+    taskName: "마케팅 예산 수립",
+    domain: "marketing",
+    keywords: ["마케팅 예산", "marketing budget", "광고비", "홍보비"],
+    intentPatterns: ["마케팅 예산이 얼마나 필요하나", "홍보 예산을 짜고 싶다"],
+  },
+  {
+    taskId: "MKT-009",
+    taskName: "미디어 플래닝",
+    domain: "marketing",
+    keywords: ["미디어", "media planning", "광고", "매체"],
+    intentPatterns: ["미디어 계획이 필요하다", "어떤 매체에 광고하나"],
+  },
+  {
+    taskId: "MKT-010",
+    taskName: "PR 전략",
+    domain: "marketing",
+    keywords: ["PR", "홍보", "언론", "보도자료", "press"],
+    intentPatterns: ["PR 전략이 필요하다", "언론 홍보 계획"],
+  },
+  {
+    taskId: "MKT-011",
+    taskName: "파트너십 전략",
+    domain: "marketing",
+    keywords: ["파트너십", "partnership", "협력", "제휴"],
+    intentPatterns: ["파트너십을 맺고 싶다", "협력 전략"],
+  },
+  {
+    taskId: "MKT-012",
+    taskName: "인플루언서 전략",
+    domain: "marketing",
+    keywords: ["인플루언서", "influencer", "KOL", "셀럽"],
+    intentPatterns: ["인플루언서를 활용하고 싶다", "인플루언서 마케팅"],
+  },
+  {
+    taskId: "MKT-013",
+    taskName: "이메일 마케팅 전략",
+    domain: "marketing",
+    keywords: ["이메일", "email marketing", "뉴스레터", "EDM"],
+    intentPatterns: ["이메일 마케팅을 하고 싶다", "뉴스레터 전략"],
+  },
+  {
+    taskId: "MKT-014",
+    taskName: "소셜 미디어 전략",
+    domain: "marketing",
+    keywords: ["소셜", "SNS", "social media", "인스타그램", "페이스북"],
+    intentPatterns: ["소셜 미디어 전략이 필요하다", "SNS 마케팅"],
+  },
+  {
+    taskId: "MKT-015",
+    taskName: "마케팅 ROI 예측",
+    domain: "marketing",
+    keywords: ["마케팅 ROI", "투자수익", "효과 예측", "성과 전망"],
+    intentPatterns: ["마케팅 ROI가 얼마일까", "마케팅 효과 예측"],
+  },
+
+  // ============ MARKETING DOMAIN - Skill 8: Execute Marketing (MKT-016~040) ============
+  {
+    taskId: "MKT-016",
+    taskName: "캠페인 런칭",
+    domain: "marketing",
+    keywords: ["캠페인 런칭", "campaign launch", "시작", "활성화"],
+    intentPatterns: ["캠페인을 시작하고 싶다", "마케팅 런칭"],
+  },
+  {
+    taskId: "MKT-017",
+    taskName: "광고 크리에이티브 제작",
+    domain: "marketing",
+    keywords: ["크리에이티브", "광고 소재", "배너", "비주얼"],
+    intentPatterns: ["광고 소재가 필요하다", "크리에이티브 제작"],
+  },
+  {
+    taskId: "MKT-018",
+    taskName: "미디어 바잉",
+    domain: "marketing",
+    keywords: ["미디어 바잉", "media buying", "광고 구매", "매체 집행"],
+    intentPatterns: ["광고를 집행하고 싶다", "미디어 바잉"],
+  },
+  {
+    taskId: "MKT-019",
+    taskName: "콘텐츠 제작",
+    domain: "marketing",
+    keywords: ["콘텐츠 제작", "content creation", "제작", "영상", "글"],
+    intentPatterns: ["콘텐츠를 만들고 싶다", "제작이 필요하다"],
+  },
+  {
+    taskId: "MKT-020",
+    taskName: "소셜 미디어 포스팅",
+    domain: "marketing",
+    keywords: ["포스팅", "posting", "게시", "업로드"],
+    intentPatterns: ["소셜에 올리고 싶다", "포스팅 일정"],
+  },
+  {
+    taskId: "MKT-021",
+    taskName: "이메일 캠페인 실행",
+    domain: "marketing",
+    keywords: ["이메일 발송", "email send", "캠페인 발송"],
+    intentPatterns: ["이메일을 보내고 싶다", "뉴스레터 발송"],
+  },
+  {
+    taskId: "MKT-022",
+    taskName: "PR 아웃리치",
+    domain: "marketing",
+    keywords: ["PR 아웃리치", "언론 홍보", "보도자료 배포"],
+    intentPatterns: ["언론에 알리고 싶다", "보도자료 배포"],
+  },
+  {
+    taskId: "MKT-023",
+    taskName: "인플루언서 관리",
+    domain: "marketing",
+    keywords: ["인플루언서 관리", "KOL 관리", "협업"],
+    intentPatterns: ["인플루언서와 협업하고 싶다", "인플루언서 관리"],
+  },
+  {
+    taskId: "MKT-024",
+    taskName: "파트너 활성화",
+    domain: "marketing",
+    keywords: ["파트너 활성화", "partner activation", "공동 마케팅"],
+    intentPatterns: ["파트너와 함께 홍보하고 싶다", "공동 마케팅"],
+  },
+  {
+    taskId: "MKT-025",
+    taskName: "랜딩페이지 최적화",
+    domain: "marketing",
+    keywords: ["랜딩페이지", "landing page", "CRO", "전환율"],
+    intentPatterns: ["랜딩페이지를 최적화하고 싶다", "전환율을 높이고 싶다"],
+  },
+  {
+    taskId: "MKT-026",
+    taskName: "A/B 테스팅",
+    domain: "marketing",
+    keywords: ["A/B 테스트", "실험", "테스팅", "변형"],
+    intentPatterns: ["A/B 테스트를 하고 싶다", "뭐가 더 효과적인지"],
+  },
+  {
+    taskId: "MKT-027",
+    taskName: "캠페인 최적화",
+    domain: "marketing",
+    keywords: ["캠페인 최적화", "optimization", "개선", "조정"],
+    intentPatterns: ["캠페인을 개선하고 싶다", "성과를 높이고 싶다"],
+  },
+  {
+    taskId: "MKT-028",
+    taskName: "예산 재배분",
+    domain: "marketing",
+    keywords: ["마케팅 예산 재배분", "budget reallocation", "예산 조정"],
+    intentPatterns: ["마케팅 예산을 조정하고 싶다", "효과적인 채널에 집중"],
+  },
+  {
+    taskId: "MKT-029",
+    taskName: "성과 트래킹",
+    domain: "marketing",
+    keywords: ["트래킹", "tracking", "추적", "모니터링"],
+    intentPatterns: ["성과를 추적하고 싶다", "어떻게 되고 있나"],
+  },
+  {
+    taskId: "MKT-030",
+    taskName: "전환 추적",
+    domain: "marketing",
+    keywords: ["전환 추적", "conversion tracking", "어트리뷰션"],
+    intentPatterns: ["전환을 추적하고 싶다", "어디서 왔는지"],
+  },
+  {
+    taskId: "MKT-031",
+    taskName: "ROI 분석",
+    domain: "marketing",
+    keywords: ["ROI 분석", "마케팅 ROI", "투자수익 분석"],
+    intentPatterns: ["마케팅 ROI를 분석하고 싶다", "투자 대비 효과"],
+  },
+  {
+    taskId: "MKT-032",
+    taskName: "경쟁사 모니터링",
+    domain: "marketing",
+    keywords: ["경쟁사 모니터링", "competitor monitoring", "경쟁 분석"],
+    intentPatterns: ["경쟁사를 모니터링하고 싶다", "경쟁사가 뭘 하나"],
+  },
+  {
+    taskId: "MKT-033",
+    taskName: "소셜 리스닝",
+    domain: "marketing",
+    keywords: ["소셜 리스닝", "social listening", "브랜드 모니터링"],
+    intentPatterns: ["사람들이 뭐라고 하나", "소셜 반응"],
+  },
+  {
+    taskId: "MKT-034",
+    taskName: "마케팅 리포팅",
+    domain: "marketing",
+    keywords: ["마케팅 리포트", "보고서", "대시보드", "reporting"],
+    intentPatterns: ["마케팅 리포트가 필요하다", "성과 보고"],
+  },
+  {
+    taskId: "MKT-035",
+    taskName: "캠페인 분석",
+    domain: "marketing",
+    keywords: ["캠페인 분석", "campaign analysis", "효과 분석"],
+    intentPatterns: ["캠페인 효과를 분석하고 싶다", "캠페인이 어땠나"],
+  },
+  {
+    taskId: "MKT-036",
+    taskName: "오디언스 인사이트",
+    domain: "marketing",
+    keywords: ["오디언스 인사이트", "audience insight", "고객 분석"],
+    intentPatterns: ["고객을 더 알고 싶다", "오디언스 분석"],
+  },
+  {
+    taskId: "MKT-037",
+    taskName: "리드 너처링",
+    domain: "marketing",
+    keywords: ["리드 너처링", "lead nurturing", "잠재고객", "육성"],
+    intentPatterns: ["리드를 육성하고 싶다", "잠재고객 관리"],
+  },
+  {
+    taskId: "MKT-038",
+    taskName: "리타겟팅 캠페인",
+    domain: "marketing",
+    keywords: ["리타겟팅", "retargeting", "리마케팅", "재방문"],
+    intentPatterns: ["리타겟팅을 하고 싶다", "다시 광고하고 싶다"],
+  },
+  {
+    taskId: "MKT-039",
+    taskName: "이탈 고객 리커버리",
+    domain: "marketing",
+    keywords: ["이탈", "recovery", "장바구니", "abandoned"],
+    intentPatterns: ["이탈한 고객을 되찾고 싶다", "장바구니 포기 고객"],
+  },
+  {
+    taskId: "MKT-040",
+    taskName: "사후 이벤트 마케팅",
+    domain: "marketing",
+    keywords: ["사후 마케팅", "post-event", "팔로업", "후속"],
+    intentPatterns: ["이벤트 끝나고 마케팅", "팔로업이 필요하다"],
+  },
+
+  // ============ OPERATIONS DOMAIN - Skill 9: Site Management (OPS-001~015) ============
+  {
+    taskId: "OPS-001",
+    taskName: "Venue Sourcing",
+    domain: "operations",
+    keywords: ["장소", "베뉴", "venue", "행사장", "공간", "site", "장소 찾기"],
+    intentPatterns: ["장소를 찾고 싶다", "베뉴를 소싱하고 싶다", "행사장이 필요하다"],
+  },
+  {
+    taskId: "OPS-002",
+    taskName: "Venue Evaluation",
+    domain: "operations",
+    keywords: ["장소 평가", "베뉴 평가", "venue evaluation", "행사장 비교"],
+    intentPatterns: ["장소를 평가하고 싶다", "베뉴를 비교하고 싶다"],
+  },
+  {
+    taskId: "OPS-003",
+    taskName: "Venue Contract",
+    domain: "operations",
+    keywords: ["장소 계약", "베뉴 계약", "venue contract", "행사장 계약"],
+    intentPatterns: ["장소 계약이 필요하다", "베뉴 계약 조건"],
+  },
+  {
+    taskId: "OPS-004",
+    taskName: "Site Inspection",
+    domain: "operations",
+    keywords: ["현장 답사", "site inspection", "사전 방문", "현장 점검"],
+    intentPatterns: ["현장 답사가 필요하다", "장소를 점검하고 싶다"],
+  },
+  {
+    taskId: "OPS-005",
+    taskName: "Floor Plan Design",
+    domain: "operations",
+    keywords: ["평면도", "floor plan", "배치도", "레이아웃", "공간 설계"],
+    intentPatterns: ["평면도를 만들고 싶다", "배치를 설계하고 싶다"],
+  },
+  {
+    taskId: "OPS-006",
+    taskName: "Room Setup",
+    domain: "operations",
+    keywords: ["룸 셋업", "room setup", "좌석 배치", "시어터", "클래스룸"],
+    intentPatterns: ["룸 셋업이 필요하다", "좌석을 배치하고 싶다"],
+  },
+  {
+    taskId: "OPS-007",
+    taskName: "AV Equipment Planning",
+    domain: "operations",
+    keywords: ["음향", "영상", "AV", "audio visual", "마이크", "스피커", "프로젝터"],
+    intentPatterns: ["AV 장비가 필요하다", "음향 시스템을 계획하고 싶다"],
+  },
+  {
+    taskId: "OPS-008",
+    taskName: "Lighting Design",
+    domain: "operations",
+    keywords: ["조명", "lighting", "무대 조명", "분위기 조명"],
+    intentPatterns: ["조명을 설계하고 싶다", "무대 조명이 필요하다"],
+  },
+  {
+    taskId: "OPS-009",
+    taskName: "Stage Design",
+    domain: "operations",
+    keywords: ["무대", "stage", "스테이지", "무대 설계", "백드롭"],
+    intentPatterns: ["무대를 설계하고 싶다", "스테이지가 필요하다"],
+  },
+  {
+    taskId: "OPS-010",
+    taskName: "Signage Planning",
+    domain: "operations",
+    keywords: ["사이니지", "signage", "안내판", "표지판", "웨이파인딩"],
+    intentPatterns: ["사이니지를 계획하고 싶다", "안내판이 필요하다"],
+  },
+  {
+    taskId: "OPS-011",
+    taskName: "Accessibility Planning",
+    domain: "operations",
+    keywords: ["접근성", "accessibility", "장애인", "휠체어", "배리어프리"],
+    intentPatterns: ["접근성을 고려하고 싶다", "장애인 편의시설"],
+  },
+  {
+    taskId: "OPS-012",
+    taskName: "Safety Compliance",
+    domain: "operations",
+    keywords: ["안전", "safety", "소방", "비상구", "안전 규정"],
+    intentPatterns: ["안전 규정을 확인하고 싶다", "소방 검사가 필요하다"],
+  },
+  {
+    taskId: "OPS-013",
+    taskName: "Permit Management",
+    domain: "operations",
+    keywords: ["허가", "permit", "인허가", "승인", "라이선스"],
+    intentPatterns: ["허가가 필요하다", "인허가 절차"],
+  },
+  {
+    taskId: "OPS-014",
+    taskName: "Venue Liaison",
+    domain: "operations",
+    keywords: ["베뉴 연락", "venue liaison", "장소 담당자", "소통"],
+    intentPatterns: ["베뉴와 소통하고 싶다", "장소 담당자 연락"],
+  },
+  {
+    taskId: "OPS-015",
+    taskName: "Decoration Planning",
+    domain: "operations",
+    keywords: ["장식", "decoration", "데코레이션", "꽃", "테이블 세팅"],
+    intentPatterns: ["장식을 계획하고 싶다", "데코레이션이 필요하다"],
+  },
+
+  // ============ OPERATIONS DOMAIN - Skill 10: Logistics Management (OPS-016~040) ============
+  {
+    taskId: "OPS-016",
+    taskName: "F&B Planning",
+    domain: "operations",
+    keywords: ["케이터링", "식사", "F&B", "음식", "식음료", "catering"],
+    intentPatterns: ["케이터링을 계획하고 싶다", "식사 제공이 필요하다"],
+  },
+  {
+    taskId: "OPS-017",
+    taskName: "Menu Development",
+    domain: "operations",
+    keywords: ["메뉴", "menu", "음식 메뉴", "식단"],
+    intentPatterns: ["메뉴를 개발하고 싶다", "어떤 음식을 제공할까"],
+  },
+  {
+    taskId: "OPS-018",
+    taskName: "Dietary Management",
+    domain: "operations",
+    keywords: ["식이 제한", "dietary", "알레르기", "채식", "할랄"],
+    intentPatterns: ["식이 제한을 관리하고 싶다", "알레르기 대응"],
+  },
+  {
+    taskId: "OPS-019",
+    taskName: "Beverage Service",
+    domain: "operations",
+    keywords: ["음료", "beverage", "커피", "바", "칵테일"],
+    intentPatterns: ["음료 서비스가 필요하다", "바를 운영하고 싶다"],
+  },
+  {
+    taskId: "OPS-020",
+    taskName: "Transportation Planning",
+    domain: "operations",
+    keywords: ["교통", "transportation", "셔틀", "버스", "이동"],
+    intentPatterns: ["교통을 계획하고 싶다", "셔틀이 필요하다"],
+  },
+  {
+    taskId: "OPS-021",
+    taskName: "Parking Management",
+    domain: "operations",
+    keywords: ["주차", "parking", "주차장", "발렛"],
+    intentPatterns: ["주차를 관리하고 싶다", "주차 공간이 필요하다"],
+  },
+  {
+    taskId: "OPS-022",
+    taskName: "Accommodation Planning",
+    domain: "operations",
+    keywords: ["숙박", "accommodation", "호텔", "숙소"],
+    intentPatterns: ["숙박을 계획하고 싶다", "호텔이 필요하다"],
+  },
+  {
+    taskId: "OPS-023",
+    taskName: "Registration Setup",
+    domain: "operations",
+    keywords: ["등록", "registration", "체크인", "현장 등록"],
+    intentPatterns: ["등록 시스템을 셋업하고 싶다", "현장 등록 준비"],
+  },
+  {
+    taskId: "OPS-024",
+    taskName: "Badge Production",
+    domain: "operations",
+    keywords: ["배지", "badge", "명찰", "네임택", "ID"],
+    intentPatterns: ["배지를 만들고 싶다", "명찰 제작"],
+  },
+  {
+    taskId: "OPS-025",
+    taskName: "Security Planning",
+    domain: "operations",
+    keywords: ["보안", "security", "경비", "출입 통제", "VIP 보안"],
+    intentPatterns: ["보안을 계획하고 싶다", "경비가 필요하다"],
+  },
+  {
+    taskId: "OPS-026",
+    taskName: "Medical Services",
+    domain: "operations",
+    keywords: ["의료", "medical", "응급", "구급", "의료진"],
+    intentPatterns: ["의료 서비스가 필요하다", "응급 상황 대비"],
+  },
+  {
+    taskId: "OPS-027",
+    taskName: "Speaker Support",
+    domain: "operations",
+    keywords: ["연사 지원", "speaker support", "발표자", "그린룸"],
+    intentPatterns: ["연사를 지원하고 싶다", "발표자 관리"],
+  },
+  {
+    taskId: "OPS-028",
+    taskName: "Exhibitor Services",
+    domain: "operations",
+    keywords: ["전시 서비스", "exhibitor", "부스 서비스", "전시사"],
+    intentPatterns: ["전시 서비스가 필요하다", "전시사 지원"],
+  },
+  {
+    taskId: "OPS-029",
+    taskName: "Networking Operations",
+    domain: "operations",
+    keywords: ["네트워킹", "networking", "미팅 존", "매칭"],
+    intentPatterns: ["네트워킹을 운영하고 싶다", "미팅 존 설치"],
+  },
+  {
+    taskId: "OPS-030",
+    taskName: "Live Streaming",
+    domain: "operations",
+    keywords: ["라이브 스트리밍", "streaming", "온라인 방송", "하이브리드"],
+    intentPatterns: ["라이브 스트리밍이 필요하다", "온라인 방송 준비"],
+  },
+  {
+    taskId: "OPS-031",
+    taskName: "Photography & Video",
+    domain: "operations",
+    keywords: ["사진", "영상", "photography", "촬영", "카메라"],
+    intentPatterns: ["촬영이 필요하다", "사진/영상팀 필요"],
+  },
+  {
+    taskId: "OPS-032",
+    taskName: "Lost & Found",
+    domain: "operations",
+    keywords: ["분실물", "lost and found", "분실", "습득"],
+    intentPatterns: ["분실물 관리가 필요하다", "분실물 센터"],
+  },
+  {
+    taskId: "OPS-033",
+    taskName: "Waste Management",
+    domain: "operations",
+    keywords: ["폐기물", "waste", "쓰레기", "재활용", "지속가능성"],
+    intentPatterns: ["폐기물을 관리하고 싶다", "친환경 행사"],
+  },
+  {
+    taskId: "OPS-034",
+    taskName: "Power Management",
+    domain: "operations",
+    keywords: ["전력", "power", "전기", "발전기", "배전"],
+    intentPatterns: ["전력을 관리하고 싶다", "전기가 더 필요하다"],
+  },
+  {
+    taskId: "OPS-035",
+    taskName: "Climate Control",
+    domain: "operations",
+    keywords: ["온도", "climate", "냉난방", "환기", "공조"],
+    intentPatterns: ["온도를 관리하고 싶다", "냉난방 조절"],
+  },
+  {
+    taskId: "OPS-036",
+    taskName: "Accessibility Operations",
+    domain: "operations",
+    keywords: ["접근성 운영", "accessibility ops", "장애인 지원"],
+    intentPatterns: ["접근성 서비스를 운영하고 싶다", "장애인 지원"],
+  },
+  {
+    taskId: "OPS-037",
+    taskName: "Signage Execution",
+    domain: "operations",
+    keywords: ["사이니지 실행", "signage execution", "표지판 설치"],
+    intentPatterns: ["사이니지를 설치하고 싶다", "안내판 배치"],
+  },
+  {
+    taskId: "OPS-038",
+    taskName: "On-site Communication",
+    domain: "operations",
+    keywords: ["현장 소통", "on-site communication", "무전", "팀 소통"],
+    intentPatterns: ["현장 소통이 필요하다", "무전기 계획"],
+  },
+  {
+    taskId: "OPS-039",
+    taskName: "Real-time Monitoring",
+    domain: "operations",
+    keywords: ["실시간 모니터링", "monitoring", "대시보드", "상황실"],
+    intentPatterns: ["실시간으로 모니터링하고 싶다", "상황실 운영"],
+  },
+  {
+    taskId: "OPS-040",
+    taskName: "Load-Out Management",
+    domain: "operations",
+    keywords: ["철수", "load-out", "해체", "원상복구", "마무리"],
+    intentPatterns: ["철수를 계획하고 싶다", "행사 후 정리"],
+  },
+
+  // ============ HR DOMAIN - Skill 11: HR Planning (HR-001~015) ============
+  {
+    taskId: "HR-001",
+    taskName: "Staff Requirements Analysis",
+    domain: "hr",
+    keywords: ["인력 요구", "스태프 분석", "인원 계획", "staffing", "인력 산정"],
+    intentPatterns: ["몇 명이 필요한가", "인력 요구사항을 분석하고 싶다"],
+  },
+  {
+    taskId: "HR-002",
+    taskName: "Role Definition",
+    domain: "hr",
+    keywords: ["역할 정의", "직무", "role", "업무 분장", "R&R"],
+    intentPatterns: ["역할을 정의하고 싶다", "누가 무슨 일을 하는가"],
+  },
+  {
+    taskId: "HR-003",
+    taskName: "Organizational Structure",
+    domain: "hr",
+    keywords: ["조직 구조", "조직도", "체계", "organization", "구성"],
+    intentPatterns: ["조직 구조가 필요하다", "조직도를 만들고 싶다"],
+  },
+  {
+    taskId: "HR-004",
+    taskName: "Skills Matrix",
+    domain: "hr",
+    keywords: ["스킬 매트릭스", "역량", "skills", "능력", "자격"],
+    intentPatterns: ["필요한 스킬을 정의하고 싶다", "역량 매트릭스가 필요하다"],
+  },
+  {
+    taskId: "HR-005",
+    taskName: "Recruitment Planning",
+    domain: "hr",
+    keywords: ["채용 계획", "모집", "recruitment", "인력 확보", "구인"],
+    intentPatterns: ["채용 계획을 세우고 싶다", "어떻게 모집하나"],
+  },
+  {
+    taskId: "HR-006",
+    taskName: "Training Needs Analysis",
+    domain: "hr",
+    keywords: ["교육 분석", "training", "훈련", "학습", "역량 개발"],
+    intentPatterns: ["어떤 교육이 필요한가", "교육 요구를 분석하고 싶다"],
+  },
+  {
+    taskId: "HR-007",
+    taskName: "Training Program Design",
+    domain: "hr",
+    keywords: ["교육 설계", "프로그램", "커리큘럼", "교육 과정"],
+    intentPatterns: ["교육 프로그램을 설계하고 싶다", "교육 과정이 필요하다"],
+  },
+  {
+    taskId: "HR-008",
+    taskName: "Compensation Planning",
+    domain: "hr",
+    keywords: ["보상 계획", "급여", "수당", "compensation", "임금"],
+    intentPatterns: ["급여를 어떻게 책정하나", "보상 계획이 필요하다"],
+  },
+  {
+    taskId: "HR-009",
+    taskName: "Scheduling Framework",
+    domain: "hr",
+    keywords: ["스케줄", "근무표", "일정", "schedule", "교대"],
+    intentPatterns: ["근무 스케줄이 필요하다", "일정을 계획하고 싶다"],
+  },
+  {
+    taskId: "HR-010",
+    taskName: "Labor Compliance Check",
+    domain: "hr",
+    keywords: ["노동법", "근로기준법", "compliance", "규정", "법적 준수"],
+    intentPatterns: ["노동법을 준수하는지 확인하고 싶다", "규정 검토가 필요하다"],
+  },
+  {
+    taskId: "HR-011",
+    taskName: "Volunteer Strategy",
+    domain: "hr",
+    keywords: ["봉사자", "자원봉사", "volunteer", "무급", "지원자"],
+    intentPatterns: ["봉사자를 어떻게 관리하나", "자원봉사 전략이 필요하다"],
+  },
+  {
+    taskId: "HR-012",
+    taskName: "HR Budget Estimation",
+    domain: "hr",
+    keywords: ["인건비 예산", "HR 비용", "labor cost", "인력 비용"],
+    intentPatterns: ["인건비 예산이 필요하다", "HR 비용을 산정하고 싶다"],
+  },
+  {
+    taskId: "HR-013",
+    taskName: "Staff Communication Plan",
+    domain: "hr",
+    keywords: ["스태프 커뮤니케이션", "소통", "전달", "공지", "연락"],
+    intentPatterns: ["스태프와 어떻게 소통하나", "커뮤니케이션 계획이 필요하다"],
+  },
+  {
+    taskId: "HR-014",
+    taskName: "Uniform & Equipment Planning",
+    domain: "hr",
+    keywords: ["유니폼", "장비", "uniform", "복장", "물품"],
+    intentPatterns: ["유니폼이 필요하다", "장비 계획을 세우고 싶다"],
+  },
+  {
+    taskId: "HR-015",
+    taskName: "Contingency Staffing",
+    domain: "hr",
+    keywords: ["비상 인력", "contingency", "대체", "예비", "백업"],
+    intentPatterns: ["비상 인력이 필요하다", "대체 인력 계획"],
+  },
+
+  // ============ HR DOMAIN - Skill 12: HR Management (HR-016~040) ============
+  {
+    taskId: "HR-016",
+    taskName: "Staff Recruitment",
+    domain: "hr",
+    keywords: ["스태프 채용", "recruitment", "모집 실행", "지원자"],
+    intentPatterns: ["스태프를 채용하고 싶다", "모집을 시작하고 싶다"],
+  },
+  {
+    taskId: "HR-017",
+    taskName: "Interview Management",
+    domain: "hr",
+    keywords: ["면접", "interview", "심사", "선발"],
+    intentPatterns: ["면접을 진행하고 싶다", "후보자 평가가 필요하다"],
+  },
+  {
+    taskId: "HR-018",
+    taskName: "Contract Management",
+    domain: "hr",
+    keywords: ["계약", "contract", "근로계약서", "서명", "고용"],
+    intentPatterns: ["계약을 관리하고 싶다", "근로계약이 필요하다"],
+  },
+  {
+    taskId: "HR-019",
+    taskName: "Onboarding Execution",
+    domain: "hr",
+    keywords: ["온보딩", "onboarding", "입사", "적응", "OJT"],
+    intentPatterns: ["온보딩을 진행하고 싶다", "신규 인원 적응"],
+  },
+  {
+    taskId: "HR-020",
+    taskName: "Training Delivery",
+    domain: "hr",
+    keywords: ["교육 실행", "training delivery", "강의", "워크숍"],
+    intentPatterns: ["교육을 실행하고 싶다", "트레이닝을 진행하고 싶다"],
+  },
+  {
+    taskId: "HR-021",
+    taskName: "Shift Assignment",
+    domain: "hr",
+    keywords: ["교대 배정", "shift", "근무 배치", "로테이션"],
+    intentPatterns: ["교대를 배정하고 싶다", "근무 배치가 필요하다"],
+  },
+  {
+    taskId: "HR-022",
+    taskName: "Attendance Tracking",
+    domain: "hr",
+    keywords: ["출석", "attendance", "체크인", "출근", "근태"],
+    intentPatterns: ["출석을 관리하고 싶다", "근태 추적이 필요하다"],
+  },
+  {
+    taskId: "HR-023",
+    taskName: "Break Management",
+    domain: "hr",
+    keywords: ["휴식", "break", "쉬는 시간", "휴게"],
+    intentPatterns: ["휴식을 관리하고 싶다", "쉬는 시간 계획"],
+  },
+  {
+    taskId: "HR-024",
+    taskName: "Real-Time Staffing",
+    domain: "hr",
+    keywords: ["실시간 인력", "real-time", "현장 배치", "재배치"],
+    intentPatterns: ["실시간 인력 조정이 필요하다", "현장에서 재배치"],
+  },
+  {
+    taskId: "HR-025",
+    taskName: "Performance Tracking",
+    domain: "hr",
+    keywords: ["성과 추적", "performance", "평가", "업무 수행"],
+    intentPatterns: ["성과를 추적하고 싶다", "직원 평가가 필요하다"],
+  },
+  {
+    taskId: "HR-026",
+    taskName: "Issue Resolution",
+    domain: "hr",
+    keywords: ["이슈 해결", "문제", "issue", "갈등", "불만"],
+    intentPatterns: ["인력 이슈를 해결하고 싶다", "문제가 발생했다"],
+  },
+  {
+    taskId: "HR-027",
+    taskName: "Emergency Staffing",
+    domain: "hr",
+    keywords: ["비상 인력", "emergency", "긴급", "대체 투입"],
+    intentPatterns: ["비상 상황에 인력이 필요하다", "긴급 투입"],
+  },
+  {
+    taskId: "HR-028",
+    taskName: "Volunteer Coordination",
+    domain: "hr",
+    keywords: ["봉사자 조율", "volunteer coordination", "자원봉사 관리"],
+    intentPatterns: ["봉사자를 조율하고 싶다", "자원봉사 운영"],
+  },
+  {
+    taskId: "HR-029",
+    taskName: "Payroll Processing",
+    domain: "hr",
+    keywords: ["급여 처리", "payroll", "임금 지급", "정산"],
+    intentPatterns: ["급여를 처리하고 싶다", "임금 정산이 필요하다"],
+  },
+  {
+    taskId: "HR-030",
+    taskName: "Staff Feedback",
+    domain: "hr",
+    keywords: ["스태프 피드백", "feedback", "의견 수집", "설문"],
+    intentPatterns: ["스태프 피드백을 받고 싶다", "의견을 수집하고 싶다"],
+  },
+  {
+    taskId: "HR-031",
+    taskName: "Staff Recognition",
+    domain: "hr",
+    keywords: ["인정", "recognition", "포상", "표창", "시상"],
+    intentPatterns: ["스태프를 인정하고 싶다", "포상이 필요하다"],
+  },
+  {
+    taskId: "HR-032",
+    taskName: "Offboarding",
+    domain: "hr",
+    keywords: ["오프보딩", "offboarding", "퇴직", "철수", "마무리"],
+    intentPatterns: ["오프보딩이 필요하다", "스태프 철수 처리"],
+  },
+  {
+    taskId: "HR-033",
+    taskName: "Labor Cost Tracking",
+    domain: "hr",
+    keywords: ["인건비 추적", "labor cost", "비용 모니터링"],
+    intentPatterns: ["인건비를 추적하고 싶다", "비용 현황이 필요하다"],
+  },
+  {
+    taskId: "HR-034",
+    taskName: "Staff Pool Management",
+    domain: "hr",
+    keywords: ["인력풀", "staff pool", "인재 풀", "데이터베이스"],
+    intentPatterns: ["인력풀을 관리하고 싶다", "스태프 DB가 필요하다"],
+  },
+  {
+    taskId: "HR-035",
+    taskName: "Credential Verification",
+    domain: "hr",
+    keywords: ["자격 검증", "credential", "자격증", "인증"],
+    intentPatterns: ["자격을 검증하고 싶다", "자격증 확인이 필요하다"],
+  },
+  {
+    taskId: "HR-036",
+    taskName: "Communication Dispatch",
+    domain: "hr",
+    keywords: ["커뮤니케이션 발송", "dispatch", "공지 발송", "메시지"],
+    intentPatterns: ["공지를 발송하고 싶다", "스태프에게 연락하고 싶다"],
+  },
+  {
+    taskId: "HR-037",
+    taskName: "Safety Compliance",
+    domain: "hr",
+    keywords: ["안전 준수", "safety", "산업안전", "보건"],
+    intentPatterns: ["안전 규정을 확인하고 싶다", "산업안전 준수"],
+  },
+  {
+    taskId: "HR-038",
+    taskName: "Staff Welfare",
+    domain: "hr",
+    keywords: ["복지", "welfare", "복리후생", "케어"],
+    intentPatterns: ["스태프 복지가 필요하다", "복리후생을 제공하고 싶다"],
+  },
+  {
+    taskId: "HR-039",
+    taskName: "Post-Event HR Reporting",
+    domain: "hr",
+    keywords: ["HR 보고", "post-event", "결과 보고", "분석"],
+    intentPatterns: ["HR 결과를 보고하고 싶다", "행사 후 HR 분석"],
+  },
+  {
+    taskId: "HR-040",
+    taskName: "Lessons Learned",
+    domain: "hr",
+    keywords: ["교훈", "lessons learned", "개선점", "회고"],
+    intentPatterns: ["교훈을 정리하고 싶다", "HR 개선점이 필요하다"],
+  },
+
+  // ============ MEETINGS DOMAIN - Skill 13: Program Design (MTG-001~020) ============
+  {
+    taskId: "MTG-001",
+    taskName: "Program Design & Structure",
+    domain: "meetings",
+    keywords: ["프로그램", "일정", "구조", "설계", "트랙", "세션 배치", "타임테이블"],
+    intentPatterns: ["프로그램을 설계하고 싶다", "일정 구조가 필요하다", "트랙을 구성하고 싶다"],
+  },
+  {
+    taskId: "MTG-002",
+    taskName: "Session Scheduling",
+    domain: "meetings",
+    keywords: ["세션", "스케줄", "시간표", "배치", "일정표", "타임슬롯"],
+    intentPatterns: ["세션 일정을 잡고 싶다", "스케줄을 최적화하고 싶다"],
+  },
+  {
+    taskId: "MTG-003",
+    taskName: "Track Management",
+    domain: "meetings",
+    keywords: ["트랙", "병렬", "세션 트랙", "주제별", "분야별"],
+    intentPatterns: ["트랙을 관리하고 싶다", "병렬 세션을 구성하고 싶다"],
+  },
+  {
+    taskId: "MTG-004",
+    taskName: "Keynote Planning",
+    domain: "meetings",
+    keywords: ["키노트", "기조연설", "메인 세션", "오프닝"],
+    intentPatterns: ["키노트를 기획하고 싶다", "기조연설 계획이 필요하다"],
+  },
+  {
+    taskId: "MTG-005",
+    taskName: "Breakout Session Design",
+    domain: "meetings",
+    keywords: ["분과", "breakout", "워크숍", "소그룹"],
+    intentPatterns: ["분과 세션을 설계하고 싶다", "워크숍을 기획하고 싶다"],
+  },
+  {
+    taskId: "MTG-006",
+    taskName: "Panel Discussion Format",
+    domain: "meetings",
+    keywords: ["패널", "토론", "좌담", "포럼"],
+    intentPatterns: ["패널 토론을 구성하고 싶다", "좌담회 형식이 필요하다"],
+  },
+  {
+    taskId: "MTG-007",
+    taskName: "Networking Session Design",
+    domain: "meetings",
+    keywords: ["네트워킹", "교류", "만남", "커피브레이크"],
+    intentPatterns: ["네트워킹 세션을 기획하고 싶다", "참석자 교류 시간이 필요하다"],
+  },
+  {
+    taskId: "MTG-008",
+    taskName: "Workshop Planning",
+    domain: "meetings",
+    keywords: ["워크숍", "실습", "hands-on", "참여형"],
+    intentPatterns: ["워크숍을 계획하고 싶다", "실습 세션이 필요하다"],
+  },
+  {
+    taskId: "MTG-009",
+    taskName: "Poster Session Management",
+    domain: "meetings",
+    keywords: ["포스터", "poster", "발표", "전시"],
+    intentPatterns: ["포스터 세션을 관리하고 싶다", "포스터 발표를 계획하고 싶다"],
+  },
+  {
+    taskId: "MTG-010",
+    taskName: "Award Ceremony Design",
+    domain: "meetings",
+    keywords: ["시상식", "어워드", "수상", "표창"],
+    intentPatterns: ["시상식을 기획하고 싶다", "어워드 세레모니가 필요하다"],
+  },
+  {
+    taskId: "MTG-011",
+    taskName: "Entertainment Programming",
+    domain: "meetings",
+    keywords: ["엔터테인먼트", "공연", "갈라", "만찬"],
+    intentPatterns: ["엔터테인먼트를 기획하고 싶다", "공연 프로그램이 필요하다"],
+  },
+  {
+    taskId: "MTG-012",
+    taskName: "Program Timing Optimizer",
+    domain: "meetings",
+    keywords: ["타이밍", "시간 배분", "최적화", "일정 조정"],
+    intentPatterns: ["프로그램 시간을 최적화하고 싶다", "일정 조정이 필요하다"],
+  },
+  {
+    taskId: "MTG-013",
+    taskName: "Room Assignment",
+    domain: "meetings",
+    keywords: ["룸 배정", "장소 배치", "공간 할당"],
+    intentPatterns: ["세션별 룸을 배정하고 싶다", "공간을 배치하고 싶다"],
+  },
+  {
+    taskId: "MTG-014",
+    taskName: "Hybrid Session Design",
+    domain: "meetings",
+    keywords: ["하이브리드", "온라인", "가상", "혼합"],
+    intentPatterns: ["하이브리드 세션을 설계하고 싶다", "온라인 참여를 계획하고 싶다"],
+  },
+  {
+    taskId: "MTG-015",
+    taskName: "Audience Engagement",
+    domain: "meetings",
+    keywords: ["청중 참여", "engagement", "인터랙션", "Q&A"],
+    intentPatterns: ["청중 참여를 높이고 싶다", "인터랙션을 계획하고 싶다"],
+  },
+  {
+    taskId: "MTG-016",
+    taskName: "Program Conflict Resolution",
+    domain: "meetings",
+    keywords: ["충돌", "conflict", "겹침", "조정"],
+    intentPatterns: ["프로그램 충돌을 해결하고 싶다", "세션 겹침을 조정하고 싶다"],
+  },
+  {
+    taskId: "MTG-017",
+    taskName: "Special Events Planning",
+    domain: "meetings",
+    keywords: ["특별 행사", "사이드 이벤트", "부대행사"],
+    intentPatterns: ["특별 행사를 기획하고 싶다", "사이드 이벤트가 필요하다"],
+  },
+  {
+    taskId: "MTG-018",
+    taskName: "Program Accessibility",
+    domain: "meetings",
+    keywords: ["접근성", "통역", "자막", "장애인"],
+    intentPatterns: ["프로그램 접근성을 확보하고 싶다", "통역이 필요하다"],
+  },
+  {
+    taskId: "MTG-019",
+    taskName: "Run of Show Creator",
+    domain: "meetings",
+    keywords: ["런시트", "run sheet", "진행표", "큐시트"],
+    intentPatterns: ["런시트를 만들고 싶다", "진행표가 필요하다"],
+  },
+  {
+    taskId: "MTG-020",
+    taskName: "Program KPI Tracker",
+    domain: "meetings",
+    keywords: ["프로그램 KPI", "성과 지표", "측정"],
+    intentPatterns: ["프로그램 성과를 측정하고 싶다", "KPI를 추적하고 싶다"],
+  },
+
+  // ============ MEETINGS DOMAIN - Skill 14: Speaker & Content (MTG-021~040) ============
+  {
+    taskId: "MTG-021",
+    taskName: "Speaker Recruitment",
+    domain: "meetings",
+    keywords: ["연사", "발표자", "초청", "섭외", "speaker"],
+    intentPatterns: ["연사를 섭외하고 싶다", "발표자를 모집하고 싶다"],
+  },
+  {
+    taskId: "MTG-022",
+    taskName: "Speaker Profile Management",
+    domain: "meetings",
+    keywords: ["연사 프로필", "이력", "바이오", "소개"],
+    intentPatterns: ["연사 프로필을 관리하고 싶다", "발표자 정보가 필요하다"],
+  },
+  {
+    taskId: "MTG-023",
+    taskName: "Speaker Communication",
+    domain: "meetings",
+    keywords: ["연사 소통", "커뮤니케이션", "안내", "메일"],
+    intentPatterns: ["연사와 소통하고 싶다", "발표자 안내가 필요하다"],
+  },
+  {
+    taskId: "MTG-024",
+    taskName: "Speaker Fee Negotiation",
+    domain: "meetings",
+    keywords: ["연사비", "사례금", "협상", "계약"],
+    intentPatterns: ["연사비를 협상하고 싶다", "사례금 책정이 필요하다"],
+  },
+  {
+    taskId: "MTG-025",
+    taskName: "Speaker Travel Coordination",
+    domain: "meetings",
+    keywords: ["연사 여행", "항공", "숙소", "교통"],
+    intentPatterns: ["연사 여행을 조율하고 싶다", "숙박을 예약하고 싶다"],
+  },
+  {
+    taskId: "MTG-026",
+    taskName: "Abstract Management",
+    domain: "meetings",
+    keywords: ["초록", "abstract", "논문", "발표 신청"],
+    intentPatterns: ["초록을 관리하고 싶다", "발표 신청을 받고 싶다"],
+  },
+  {
+    taskId: "MTG-027",
+    taskName: "Peer Review Coordination",
+    domain: "meetings",
+    keywords: ["심사", "peer review", "평가", "선정"],
+    intentPatterns: ["심사를 진행하고 싶다", "초록 평가가 필요하다"],
+  },
+  {
+    taskId: "MTG-028",
+    taskName: "Presentation Guidelines",
+    domain: "meetings",
+    keywords: ["발표 가이드", "템플릿", "규정", "양식"],
+    intentPatterns: ["발표 가이드라인을 만들고 싶다", "템플릿이 필요하다"],
+  },
+  {
+    taskId: "MTG-029",
+    taskName: "Content Collection",
+    domain: "meetings",
+    keywords: ["콘텐츠 수집", "자료 수합", "PPT", "발표자료"],
+    intentPatterns: ["발표 자료를 수집하고 싶다", "콘텐츠를 모으고 싶다"],
+  },
+  {
+    taskId: "MTG-030",
+    taskName: "Content Review & QA",
+    domain: "meetings",
+    keywords: ["콘텐츠 검토", "QA", "품질", "확인"],
+    intentPatterns: ["콘텐츠를 검토하고 싶다", "품질 확인이 필요하다"],
+  },
+  {
+    taskId: "MTG-031",
+    taskName: "CE/CME Credit Management",
+    domain: "meetings",
+    keywords: ["CE", "CME", "학점", "인증", "평점"],
+    intentPatterns: ["CE 학점을 관리하고 싶다", "인증 프로그램이 필요하다"],
+  },
+  {
+    taskId: "MTG-032",
+    taskName: "Technical Rehearsal",
+    domain: "meetings",
+    keywords: ["리허설", "기술 점검", "사전 테스트", "드라이런"],
+    intentPatterns: ["리허설을 계획하고 싶다", "기술 점검이 필요하다"],
+  },
+  {
+    taskId: "MTG-033",
+    taskName: "Speaker Ready Room",
+    domain: "meetings",
+    keywords: ["스피커 룸", "대기실", "준비실"],
+    intentPatterns: ["스피커 룸을 운영하고 싶다", "대기실이 필요하다"],
+  },
+  {
+    taskId: "MTG-034",
+    taskName: "Presentation Recording",
+    domain: "meetings",
+    keywords: ["녹화", "recording", "영상", "아카이브"],
+    intentPatterns: ["발표를 녹화하고 싶다", "영상 아카이브가 필요하다"],
+  },
+  {
+    taskId: "MTG-035",
+    taskName: "On-demand Content",
+    domain: "meetings",
+    keywords: ["온디맨드", "on-demand", "VOD", "다시보기"],
+    intentPatterns: ["온디맨드 콘텐츠를 제공하고 싶다", "VOD가 필요하다"],
+  },
+  {
+    taskId: "MTG-036",
+    taskName: "Session Feedback Analysis",
+    domain: "meetings",
+    keywords: ["세션 피드백", "평가", "설문", "만족도"],
+    intentPatterns: ["세션 피드백을 분석하고 싶다", "만족도를 측정하고 싶다"],
+  },
+  {
+    taskId: "MTG-037",
+    taskName: "Content Repurposing",
+    domain: "meetings",
+    keywords: ["콘텐츠 재활용", "repurpose", "편집", "재가공"],
+    intentPatterns: ["콘텐츠를 재활용하고 싶다", "편집이 필요하다"],
+  },
+  {
+    taskId: "MTG-038",
+    taskName: "Event App Content",
+    domain: "meetings",
+    keywords: ["앱 콘텐츠", "모바일", "디지털"],
+    intentPatterns: ["앱 콘텐츠를 준비하고 싶다", "모바일 정보가 필요하다"],
+  },
+  {
+    taskId: "MTG-039",
+    taskName: "Proceedings Publication",
+    domain: "meetings",
+    keywords: ["학술 발표집", "proceedings", "출판", "논문집"],
+    intentPatterns: ["발표집을 출판하고 싶다", "proceedings가 필요하다"],
+  },
+  {
+    taskId: "MTG-040",
+    taskName: "Speaker Recognition",
+    domain: "meetings",
+    keywords: ["연사 감사", "표창", "인정", "기념"],
+    intentPatterns: ["연사에게 감사하고 싶다", "표창이 필요하다"],
+  },
 ];
 
 // =============================================================================
@@ -778,11 +2221,11 @@ This system is ONLY for EVENT PLANNING and MANAGEMENT. If the question is about:
 - Personal questions (relationships, health, etc.)
 - Unrelated topics (cooking, sports scores, etc.)
 - Technical support for unrelated products
-- Any topic NOT related to event planning, finance, strategy, or management
+- Any topic NOT related to event planning, finance, strategy, marketing, or management
 
 You MUST return "out_of_scope" domain with taskId "NONE".
 
-## Available Agents (122 total)
+## Available Agents (322 total)
 
 ### Strategy Domain (STR-001~054) - CMP-IS Domain A: Strategic Planning
 **Skill 1: Goal Setting (STR-001~013)**
@@ -797,8 +2240,56 @@ You MUST return "out_of_scope" domain with taskId "NONE".
 **Skill 4: Strategic Alignment (STR-041~054)**
 - STR-041~054: 전략 목표(BSC), KPI 설계, 변화 관리, 벤치마크, 시나리오 플래닝
 
-### Finance Domain (FIN-001~068)
-${agentList}
+### Project Domain (PRJ-001~040) - CMP-IS Domain B: Project Management
+**Skill 5: Plan Project (PRJ-001~013)**
+- PRJ-001~013: 일정 수립, 자원 계획, 범위 정의, WBS, 마일스톤, 역할 책임, 품질/조달 계획
+
+**Skill 6: Manage Project (PRJ-014~040)**
+- PRJ-014~027: 일정/자원/이슈 모니터링, 변경 관리, 진척도 보고, EVM, 팀 조율
+- PRJ-028~040: 지식 공유, 인수인계, 계약 종료, 사후 평가, 자원 해제, 프로젝트 종료
+
+### Marketing Domain (MKT-001~040) - CMP-IS Domain C: Marketing Management
+**Skill 7: Plan Marketing (MKT-001~015)**
+- MKT-001~015: 시장 조사, 타겟 정의, 경쟁사 분석, 브랜드/채널/콘텐츠/캠페인 전략, 마케팅 예산, 미디어 플래닝, PR/파트너십/인플루언서/이메일/소셜 전략, ROI 예측
+
+**Skill 8: Execute Marketing (MKT-016~040)**
+- MKT-016~025: 캠페인 런칭, 크리에이티브 제작, 미디어 바잉, 콘텐츠 제작, 소셜/이메일/PR/인플루언서/파트너 실행, 랜딩페이지 최적화
+- MKT-026~040: A/B 테스팅, 캠페인 최적화, 예산 재배분, 성과/전환 추적, ROI 분석, 경쟁사/소셜 모니터링, 리포팅, 캠페인 분석, 리드 너처링, 리타겟팅, 사후 마케팅
+
+### Finance Domain (FIN-001~068) - CMP-IS Domain D: Financial Management
+**Skill 7: Manage Event Funding (FIN-001~030)**
+- FIN-001~030: 스폰서십 가치 산정, 스폰서 ROI, 등록 수익, 전시 수익, 추가 수익원
+
+**Skill 8: Manage Budget (FIN-031~057)**
+- FIN-031~057: 예산 구조, 비용 분석, 수익 예측, 손익분기점, 가격 책정, 예산 통제
+
+**Skill 9: Manage Monetary Transactions (FIN-058~068)**
+- FIN-058~068: 결제 시스템, 환불, 세금, 인보이스, 수금, 재무 보고
+
+### Operations Domain (OPS-001~040) - CMP-IS Domain E: Operations Management
+**Skill 9: Site Management (OPS-001~015)**
+- OPS-001~015: 장소 소싱/평가/계약, 현장 답사, 평면도, 룸 셋업, AV/조명/무대, 사이니지, 접근성, 안전, 허가, 장식
+
+**Skill 10: Logistics Management (OPS-016~040)**
+- OPS-016~026: F&B/메뉴/음료, 교통/주차/숙박, 등록/배지, 보안/의료
+- OPS-027~040: 연사/전시사 지원, 네트워킹, 라이브 스트리밍, 촬영, 분실물, 폐기물, 전력, 온도, 접근성 운영, 사이니지 실행, 현장 소통, 모니터링, 철수
+
+### HR Domain (HR-001~040) - CMP-IS Domain F: Human Resources
+**Skill 11: HR Planning (HR-001~015)**
+- HR-001~015: 인력 요구 분석, 역할 정의, 조직 구조, 스킬 매트릭스, 채용 계획, 교육 분석/설계, 보상 계획, 스케줄링, 노동법 준수, 봉사자 전략, HR 예산, 커뮤니케이션 계획, 유니폼/장비, 비상 인력
+
+**Skill 12: HR Management (HR-016~040)**
+- HR-016~025: 스태프 채용, 면접, 계약, 온보딩, 교육 실행, 교대 배정, 출석 추적, 휴식 관리, 실시간 인력, 성과 추적
+- HR-026~040: 이슈 해결, 비상 인력, 봉사자 조율, 급여 처리, 피드백, 인정, 오프보딩, 인건비 추적, 인력풀, 자격 검증, 커뮤니케이션 발송, 안전 준수, 복지, HR 보고, 교훈
+
+### Meetings Domain (MTG-001~040) - CMP-IS Domain G: Meetings & Contents
+**Skill 13: Program Design (MTG-001~020)**
+- MTG-001~010: 프로그램 구조 설계, 세션 스케줄링, 트랙 관리, 키노트/브레이크아웃/패널/네트워킹/워크숍 기획
+- MTG-011~020: 시상식, 엔터테인먼트, 타이밍 최적화, 룸 배정, 하이브리드 설계, 청중 참여, 충돌 해결, 특별행사, 접근성, 런시트, KPI 추적
+
+**Skill 14: Speaker & Content Management (MTG-021~040)**
+- MTG-021~030: 연사 섭외/프로필/소통/사례금/여행 조율, 초록 관리, 심사, 발표 가이드, 콘텐츠 수집/검토
+- MTG-031~040: CE/CME 학점, 리허설, 스피커룸, 녹화, 온디맨드, 피드백 분석, 콘텐츠 재활용, 앱 콘텐츠, 발표집, 연사 인정
 
 ## ROUTING RULES
 
@@ -806,7 +2297,13 @@ ${agentList}
 2. **Intent-Based Selection**: Focus on what the user WANTS TO DO, not just keywords
 3. **Domain Priority**:
    - Questions about GOALS, STAKEHOLDERS, RISKS → Strategy (STR-*)
+   - Questions about PROJECT PLANNING, SCHEDULING, WBS, RESOURCES, MILESTONES → Project (PRJ-*)
+   - Questions about PROJECT EXECUTION, ISSUES, PROGRESS, CLOSURE → Project (PRJ-*)
+   - Questions about MARKETING, PROMOTION, CAMPAIGNS, ADVERTISING, SNS, PR, INFLUENCER → Marketing (MKT-*)
    - Questions about MONEY, BUDGET, PRICING, SPONSORS → Finance (FIN-*)
+   - Questions about VENUE, SITE, F&B, CATERING, AV, LIGHTING, SECURITY, REGISTRATION, LOGISTICS → Operations (OPS-*)
+   - Questions about STAFF, RECRUITMENT, TRAINING, PAYROLL, VOLUNTEER, SCHEDULING, ATTENDANCE, ONBOARDING → HR (HR-*)
+   - Questions about PROGRAM, SESSIONS, SPEAKERS, PRESENTERS, TRACKS, KEYNOTE, ABSTRACTS, CONTENT, CE/CME → Meetings (MTG-*)
 4. **Specificity**: Choose the most specific agent that matches the intent
 5. **Confidence**: Rate your confidence from 0.0 to 1.0
 
@@ -814,8 +2311,8 @@ ${agentList}
 
 You MUST respond with ONLY a valid JSON object:
 {
-  "taskId": "FIN-001 or STR-001 or NONE",
-  "domain": "finance" or "strategy" or "out_of_scope",
+  "taskId": "FIN-001 or STR-001 or PRJ-001 or MKT-001 or OPS-001 or HR-001 or MTG-001 or NONE",
+  "domain": "finance" or "strategy" or "project" or "marketing" or "operations" or "hr" or "meetings" or "out_of_scope",
   "confidence": 0.85,
   "reasoning": "Brief explanation of why this agent was selected or why it's out of scope"
 }
@@ -910,6 +2407,40 @@ CRITICAL: Output ONLY the JSON object, nothing else.`;
       "목표", "goal", "예산", "budget", "스폰서", "sponsor", "리스크", "risk",
       "이해관계자", "stakeholder", "전략", "strategy", "참가자", "attendee",
       "등록", "registration", "가격", "price", "비용", "cost", "수익", "revenue",
+      // Project Domain keywords
+      "프로젝트", "project", "일정", "schedule", "WBS", "마일스톤", "milestone",
+      "자원", "resource", "범위", "scope", "산출물", "deliverable", "팀", "team",
+      "진척", "progress", "이슈", "issue", "변경", "change", "품질", "quality",
+      "인수인계", "handover", "종료", "closure", "교훈", "lessons",
+      // Marketing Domain keywords
+      "마케팅", "marketing", "홍보", "promotion", "광고", "advertising", "캠페인", "campaign",
+      "소셜", "SNS", "social media", "인스타그램", "페이스북", "링크드인", "유튜브",
+      "인플루언서", "influencer", "PR", "보도자료", "언론", "미디어", "media",
+      "타겟", "target", "오디언스", "audience", "브랜드", "brand", "콘텐츠", "content",
+      "크리에이티브", "creative", "리타겟팅", "retargeting", "전환", "conversion",
+      "랜딩페이지", "landing page", "이메일", "email", "뉴스레터", "newsletter",
+      // Operations Domain keywords
+      "장소", "베뉴", "venue", "행사장", "site", "현장", "답사",
+      "음향", "AV", "조명", "lighting", "무대", "stage", "스테이지",
+      "케이터링", "catering", "식사", "F&B", "음식", "메뉴", "음료",
+      "셔틀", "교통", "주차", "숙박", "호텔", "accommodation",
+      "등록", "배지", "badge", "체크인", "현장 등록",
+      "보안", "security", "경비", "의료", "medical", "응급",
+      "연사", "speaker", "발표자", "그린룸", "전시사", "exhibitor",
+      "사이니지", "signage", "안내판", "장식", "decoration",
+      "접근성", "accessibility", "휠체어", "안전", "safety",
+      "철수", "load-out", "원상복구", "하이브리드", "스트리밍",
+      // HR Domain keywords
+      "스태프", "staff", "인력", "인원", "채용", "recruitment", "모집",
+      "교육", "training", "훈련", "온보딩", "onboarding",
+      "급여", "payroll", "임금", "보상", "compensation",
+      "봉사자", "volunteer", "자원봉사",
+      "근무", "shift", "교대", "스케줄", "출석", "attendance", "근태",
+      "역할", "role", "직무", "R&R", "조직",
+      "노동법", "근로기준법", "compliance",
+      "면접", "interview", "계약", "contract",
+      "성과", "performance", "평가", "피드백", "feedback",
+      "복지", "welfare", "휴식", "break",
     ];
 
     // 이벤트 관련 키워드가 있으면 out-of-scope 아님
@@ -997,6 +2528,260 @@ CRITICAL: Output ONLY the JSON object, nothing else.`;
       confidence: Math.min(bestMatch.score / 30, 0.9),
       reasoning: `Keyword matching: ${bestMatch.agent.taskName}`,
       isOutOfScope: false,
+    };
+  }
+
+  /**
+   * 복합 쿼리 분석 - 여러 에이전트가 필요한 질문인지 판단
+   */
+  async analyzeComplexQuery(input: RouterInput): Promise<ComplexRouterOutput> {
+    // 먼저 단순 라우팅 수행
+    const simpleRoute = await this.route(input);
+
+    // Out-of-scope면 바로 반환
+    if (simpleRoute.isOutOfScope) {
+      return simpleRoute;
+    }
+
+    // 복합 쿼리 패턴 감지
+    const complexityIndicators = this.detectComplexityIndicators(input.question);
+
+    if (!complexityIndicators.isComplex) {
+      // 단순 쿼리면 그대로 반환
+      return simpleRoute;
+    }
+
+    // 복합 쿼리 - ExecutionPlan 생성
+    try {
+      const executionPlan = await this.generateExecutionPlan(input, complexityIndicators);
+
+      return {
+        ...simpleRoute,
+        taskId: executionPlan.steps[0]?.taskId ?? simpleRoute.taskId,
+        reasoning: `Complex query detected: ${executionPlan.reasoning}`,
+        executionPlan,
+      };
+    } catch (error) {
+      console.error("ExecutionPlan generation failed:", error);
+      return simpleRoute;
+    }
+  }
+
+  /**
+   * 복합 쿼리 패턴 감지
+   */
+  private detectComplexityIndicators(question: string): {
+    isComplex: boolean;
+    patterns: string[];
+    suggestedDomains: string[];
+  } {
+    const patterns: string[] = [];
+    const suggestedDomains: Set<string> = new Set();
+    const lowerQuestion = question.toLowerCase();
+
+    // 접속사/연결어 패턴 - 복합 질문 감지
+    const conjunctionPatterns = [
+      { pattern: /그리고|또한|더불어|함께|동시에/, name: "sequential" },
+      { pattern: /그 다음에?|이후에?|완료되면|끝나면/, name: "dependent" },
+      { pattern: /비교해|대비해|vs|versus|어떤 게 나은/, name: "comparison" },
+      { pattern: /전체적으로|종합적으로|전반적으로/, name: "comprehensive" },
+      { pattern: /먼저.*(그 다음|이후|그리고)/, name: "ordered_sequence" },
+    ];
+
+    for (const { pattern, name } of conjunctionPatterns) {
+      if (pattern.test(lowerQuestion)) {
+        patterns.push(name);
+      }
+    }
+
+    // 도메인 키워드 감지
+    const domainPatterns = [
+      { domain: "strategy", keywords: ["목표", "비전", "리스크", "이해관계자", "전략"] },
+      { domain: "finance", keywords: ["예산", "비용", "스폰서", "수익", "ROI", "가격"] },
+      { domain: "project", keywords: ["일정", "WBS", "마일스톤", "진척", "프로젝트"] },
+      { domain: "marketing", keywords: ["홍보", "마케팅", "캠페인", "SNS", "광고"] },
+      { domain: "operations", keywords: ["장소", "베뉴", "케이터링", "등록", "현장"] },
+      { domain: "hr", keywords: ["스태프", "인력", "채용", "교육", "급여", "봉사자"] },
+      { domain: "meetings", keywords: ["프로그램", "세션", "연사", "발표", "트랙", "키노트", "초록", "콘텐츠"] },
+    ];
+
+    for (const { domain, keywords } of domainPatterns) {
+      for (const keyword of keywords) {
+        if (lowerQuestion.includes(keyword)) {
+          suggestedDomains.add(domain);
+          break;
+        }
+      }
+    }
+
+    // 복합 쿼리 판단 기준:
+    // 1. 여러 도메인 키워드가 섞여 있음 (2개 이상)
+    // 2. 접속사/연결어 패턴이 발견됨
+    const isComplex = suggestedDomains.size >= 2 || patterns.length > 0;
+
+    return {
+      isComplex,
+      patterns,
+      suggestedDomains: Array.from(suggestedDomains),
+    };
+  }
+
+  /**
+   * 복합 쿼리에 대한 ExecutionPlan 생성
+   */
+  private async generateExecutionPlan(
+    input: RouterInput,
+    indicators: { patterns: string[]; suggestedDomains: string[] }
+  ): Promise<ExecutionPlan> {
+    const planId = `plan_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+
+    // LLM을 사용하여 실행 계획 생성
+    const systemPrompt = `You are an execution planner for an Event Management AI system.
+Given a complex question that requires multiple agents, create an ordered execution plan.
+
+## Available Domains and Example Agents
+- strategy: STR-001 (Goal Setting), STR-002 (Stakeholder Analysis), STR-003 (Risk Assessment)
+- project: PRJ-001 (Scope Definition), PRJ-005 (WBS Creation), PRJ-014 (Schedule Monitoring)
+- marketing: MKT-001 (Market Analysis), MKT-007 (Campaign Planning), MKT-014 (Social Media)
+- finance: FIN-001 (Sponsorship Valuation), FIN-031 (Budget Structure), FIN-037 (Break-Even)
+- operations: OPS-001 (Venue Sourcing), OPS-008 (Catering), OPS-022 (Crowd Management)
+- hr: HR-001 (Staffing Needs), HR-016 (Recruitment), HR-022 (Attendance)
+- meetings: MTG-001 (Program Design), MTG-021 (Speaker Recruitment), MTG-026 (Abstract Management)
+
+## Rules for Creating Execution Plan
+1. Order steps logically - strategy/planning before execution
+2. Mark dependencies between steps
+3. Use the most specific agent for each sub-task
+4. Keep plans concise (2-5 steps typically)
+
+## Output Format (STRICT JSON)
+{
+  "steps": [
+    {
+      "stepNumber": 1,
+      "taskId": "STR-001",
+      "domain": "strategy",
+      "purpose": "Define event goals first",
+      "dependsOn": [],
+      "inputMapping": {}
+    },
+    {
+      "stepNumber": 2,
+      "taskId": "FIN-031",
+      "domain": "finance",
+      "purpose": "Create budget based on goals",
+      "dependsOn": [1],
+      "inputMapping": {"goals": "step1.output.goals"}
+    }
+  ],
+  "reasoning": "Brief explanation of the plan"
+}
+
+Output ONLY valid JSON.`;
+
+    const userPrompt = `Question: "${input.question}"
+
+Detected patterns: ${indicators.patterns.join(", ") || "none"}
+Suggested domains: ${indicators.suggestedDomains.join(", ")}
+
+Create an execution plan with 2-5 steps to answer this complex question.`;
+
+    try {
+      const response = await this.ai.run(this.model, {
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        max_tokens: 1024,
+        temperature: 0.3,
+      });
+
+      const responseText =
+        typeof response === "string"
+          ? response
+          : (response as { response?: string }).response || "";
+
+      // JSON 추출 및 파싱
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        // 유효성 검증 및 정제
+        const steps: ExecutionStep[] = (parsed.steps || [])
+          .filter((step: Record<string, unknown>) => step && typeof step.taskId === "string")
+          .map((step: Record<string, unknown>, index: number) => ({
+            stepNumber: typeof step.stepNumber === "number" ? step.stepNumber : index + 1,
+            taskId: String(step.taskId || ""),
+            domain: this.validateDomain(step.domain),
+            purpose: String(step.purpose || ""),
+            dependsOn: Array.isArray(step.dependsOn) ? step.dependsOn.filter((d: unknown) => typeof d === "number") : [],
+            inputMapping: typeof step.inputMapping === "object" && step.inputMapping !== null ? step.inputMapping as Record<string, string> : undefined,
+          }));
+
+        return {
+          planId,
+          isComplex: true,
+          steps,
+          totalSteps: steps.length,
+          reasoning: String(parsed.reasoning || "Multi-step execution plan generated"),
+          estimatedComplexity: steps.length <= 2 ? "moderate" : "complex",
+        };
+      }
+    } catch (error) {
+      console.error("ExecutionPlan LLM error:", error);
+    }
+
+    // Fallback: 감지된 도메인 기반으로 단순 계획 생성
+    return this.createFallbackPlan(planId, indicators.suggestedDomains);
+  }
+
+  /**
+   * 도메인 값 검증
+   */
+  private validateDomain(domain: unknown): "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" {
+    const validDomains = ["finance", "strategy", "project", "marketing", "operations", "hr"] as const;
+    if (typeof domain === "string" && validDomains.includes(domain as typeof validDomains[number])) {
+      return domain as typeof validDomains[number];
+    }
+    return "strategy"; // 기본값
+  }
+
+  /**
+   * Fallback 실행 계획 생성
+   */
+  private createFallbackPlan(planId: string, suggestedDomains: string[]): ExecutionPlan {
+    // 도메인 우선순위 순서
+    const domainOrder = ["strategy", "project", "finance", "marketing", "operations", "hr"];
+    const sortedDomains = suggestedDomains.sort((a, b) =>
+      domainOrder.indexOf(a) - domainOrder.indexOf(b)
+    );
+
+    // 각 도메인의 대표 에이전트 매핑
+    const domainDefaultAgents: Record<string, string> = {
+      strategy: "STR-001",
+      project: "PRJ-001",
+      finance: "FIN-031",
+      marketing: "MKT-001",
+      operations: "OPS-001",
+      hr: "HR-001",
+    };
+
+    const steps: ExecutionStep[] = sortedDomains.slice(0, 4).map((domain, index) => ({
+      stepNumber: index + 1,
+      taskId: domainDefaultAgents[domain] || "STR-001",
+      domain: domain as ExecutionStep["domain"],
+      purpose: `Process ${domain} domain aspects`,
+      dependsOn: index > 0 ? [index] : [],
+      inputMapping: undefined,
+    }));
+
+    return {
+      planId,
+      isComplex: true,
+      steps,
+      totalSteps: steps.length,
+      reasoning: "Fallback plan based on detected domain keywords",
+      estimatedComplexity: steps.length <= 2 ? "moderate" : "complex",
     };
   }
 

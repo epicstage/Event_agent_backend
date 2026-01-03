@@ -12,6 +12,10 @@ import type { Env } from "../types";
 import { createRouter, IntelligentRouter } from "../lib/router";
 import { executeAgentWithLLM as executeFinanceAgent } from "../agents/finance/registry";
 import { executeAgentWithLLM as executeStrategyAgent } from "../agents/strategy/registry";
+import { executeAgentWithLLM as executeProjectAgent } from "../agents/project/registry";
+import { executeAgentWithLLM as executeMarketingAgent } from "../agents/marketing/registry";
+import { executeAgentWithLLM as executeOperationsAgent } from "../agents/operations/registry";
+import { executeAgentWithLLM as executeHRAgent } from "../agents/hr/registry";
 import {
   getSessionContext,
   addConversation,
@@ -70,14 +74,21 @@ ask.post("/route", async (c) => {
       });
     }
 
+    const domainEndpoints: Record<string, string> = {
+      finance: "/finance/agents/execute-with-llm",
+      strategy: "/strategy/agents/execute-with-llm",
+      project: "/project/agents/execute-with-llm",
+      marketing: "/marketing/agents/execute-with-llm",
+      operations: "/operations/agents/execute-with-llm",
+      hr: "/hr/agents/execute-with-llm",
+    };
+
     return c.json({
       success: true,
       isOutOfScope: false,
       routing: routeResult,
       next_action: {
-        endpoint: routeResult.domain === "finance"
-          ? `/finance/agents/execute-with-llm`
-          : `/strategy/agents/execute-with-llm`,
+        endpoint: domainEndpoints[routeResult.domain] || "/ask",
         method: "POST",
         body_hint: {
           taskId: routeResult.taskId,
@@ -183,6 +194,38 @@ ask.post("/", async (c) => {
         shortTermMemory,
         sessionContext?.preferences
       );
+    } else if (routeResult.domain === "project") {
+      agentResult = await executeProjectAgent(
+        routeResult.taskId,
+        agentInput,
+        c.env.AI,
+        shortTermMemory,
+        sessionContext?.preferences
+      );
+    } else if (routeResult.domain === "marketing") {
+      agentResult = await executeMarketingAgent(
+        routeResult.taskId,
+        agentInput,
+        c.env.AI,
+        shortTermMemory,
+        sessionContext?.preferences
+      );
+    } else if (routeResult.domain === "operations") {
+      agentResult = await executeOperationsAgent(
+        routeResult.taskId,
+        agentInput,
+        c.env.AI,
+        shortTermMemory,
+        sessionContext?.preferences
+      );
+    } else if (routeResult.domain === "hr") {
+      agentResult = await executeHRAgent(
+        routeResult.taskId,
+        agentInput,
+        c.env.AI,
+        shortTermMemory,
+        sessionContext?.preferences
+      );
     } else {
       // Fallback - should not reach here due to out-of-scope check above
       return c.json({
@@ -252,7 +295,11 @@ ask.get("/catalog", (c) => {
 
   const byDomain = {
     strategy: catalog.filter((a: { domain: string }) => a.domain === "strategy"),
+    project: catalog.filter((a: { domain: string }) => a.domain === "project"),
+    marketing: catalog.filter((a: { domain: string }) => a.domain === "marketing"),
     finance: catalog.filter((a: { domain: string }) => a.domain === "finance"),
+    operations: catalog.filter((a: { domain: string }) => a.domain === "operations"),
+    hr: catalog.filter((a: { domain: string }) => a.domain === "hr"),
   };
 
   return c.json({
@@ -260,7 +307,11 @@ ask.get("/catalog", (c) => {
     total: catalog.length,
     by_domain: {
       strategy: byDomain.strategy.length,
+      project: byDomain.project.length,
+      marketing: byDomain.marketing.length,
       finance: byDomain.finance.length,
+      operations: byDomain.operations.length,
+      hr: byDomain.hr.length,
     },
     catalog: byDomain,
   });
