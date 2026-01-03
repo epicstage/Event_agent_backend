@@ -4,7 +4,7 @@
  * Cloudflare Workers AI를 사용한 지능형 에이전트 라우터.
  * - 사용자 질문을 분석하여 가장 적합한 에이전트 선택
  * - Intent 기반 라우팅 (키워드 매칭 아님)
- * - STR-001~054 (54개) + PRJ-001~040 (40개) + MKT-001~040 (40개) + FIN-001~068 (68개) + OPS-001~040 (40개) + HR-001~040 (40개) + MTG-001~040 (40개) = 총 322개 에이전트 지원
+ * - STR-001~054 (54개) + PRJ-001~040 (40개) + MKT-001~040 (40개) + FIN-001~068 (68개) + OPS-001~040 (40개) + HR-001~040 (40개) + MTG-001~040 (40개) + SITE-001~040 (40개) = 총 362개 에이전트 지원
  */
 
 // =============================================================================
@@ -22,7 +22,7 @@ export interface RouterInput {
 
 export interface RouterOutput {
   taskId: string;
-  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "out_of_scope";
+  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "site" | "out_of_scope";
   confidence: number;
   reasoning: string;
   suggested_input?: Record<string, unknown>;
@@ -33,7 +33,7 @@ export interface RouterOutput {
 export interface ExecutionStep {
   stepNumber: number;
   taskId: string;
-  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings";
+  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "site";
   purpose: string;
   dependsOn: number[]; // 의존하는 이전 step 번호들
   inputMapping?: Record<string, string>; // 이전 step 출력에서 가져올 필드 매핑
@@ -55,7 +55,7 @@ export interface ComplexRouterOutput extends RouterOutput {
 export interface AgentMetadata {
   taskId: string;
   taskName: string;
-  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings";
+  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "site";
   keywords: string[];
   intentPatterns: string[];
 }
@@ -2157,6 +2157,290 @@ const AGENT_CATALOG: AgentMetadata[] = [
     keywords: ["연사 감사", "표창", "인정", "기념"],
     intentPatterns: ["연사에게 감사하고 싶다", "표창이 필요하다"],
   },
+
+  // ============ SITE DOMAIN - Skill 15: Site Selection & Design (SITE-001~020) ============
+  {
+    taskId: "SITE-001",
+    taskName: "Site Selection Analysis",
+    domain: "site",
+    keywords: ["사이트 선정", "장소 분석", "베뉴 평가", "site selection", "장소 비교"],
+    intentPatterns: ["행사장을 선정하고 싶다", "장소를 분석하고 싶다", "베뉴를 평가하고 싶다"],
+  },
+  {
+    taskId: "SITE-002",
+    taskName: "Venue Contract Negotiation",
+    domain: "site",
+    keywords: ["베뉴 계약", "장소 협상", "venue contract", "임대 계약"],
+    intentPatterns: ["베뉴 계약을 협상하고 싶다", "장소 계약이 필요하다"],
+  },
+  {
+    taskId: "SITE-003",
+    taskName: "Site Inspection",
+    domain: "site",
+    keywords: ["현장 답사", "사이트 점검", "site inspection", "장소 확인"],
+    intentPatterns: ["현장 답사를 하고 싶다", "사이트를 점검하고 싶다"],
+  },
+  {
+    taskId: "SITE-004",
+    taskName: "Floor Plan Design",
+    domain: "site",
+    keywords: ["평면도", "배치도", "floor plan", "레이아웃", "공간 설계"],
+    intentPatterns: ["평면도를 설계하고 싶다", "배치를 계획하고 싶다"],
+  },
+  {
+    taskId: "SITE-005",
+    taskName: "Safety & Security Planning",
+    domain: "site",
+    keywords: ["안전 계획", "보안 계획", "safety", "security", "비상 대응"],
+    intentPatterns: ["안전 계획을 세우고 싶다", "보안을 계획하고 싶다"],
+  },
+  {
+    taskId: "SITE-006",
+    taskName: "Logistics Coordination",
+    domain: "site",
+    keywords: ["물류", "logistics", "운송", "배송", "반입"],
+    intentPatterns: ["물류를 조율하고 싶다", "운송 계획이 필요하다"],
+  },
+  {
+    taskId: "SITE-007",
+    taskName: "Equipment Inventory",
+    domain: "site",
+    keywords: ["장비 목록", "equipment", "인벤토리", "기자재"],
+    intentPatterns: ["장비 목록을 관리하고 싶다", "기자재를 확인하고 싶다"],
+  },
+  {
+    taskId: "SITE-008",
+    taskName: "Setup Schedule",
+    domain: "site",
+    keywords: ["셋업 일정", "setup", "설치", "준비 일정"],
+    intentPatterns: ["셋업 일정을 잡고 싶다", "설치 계획이 필요하다"],
+  },
+  {
+    taskId: "SITE-009",
+    taskName: "Teardown Planning",
+    domain: "site",
+    keywords: ["철거", "teardown", "철수", "원상복구"],
+    intentPatterns: ["철수를 계획하고 싶다", "철거 일정이 필요하다"],
+  },
+  {
+    taskId: "SITE-010",
+    taskName: "Signage & Wayfinding",
+    domain: "site",
+    keywords: ["사이니지", "안내판", "signage", "wayfinding", "동선"],
+    intentPatterns: ["사이니지를 계획하고 싶다", "안내 체계가 필요하다"],
+  },
+  {
+    taskId: "SITE-011",
+    taskName: "Power & Electrical",
+    domain: "site",
+    keywords: ["전력", "전기", "power", "electrical", "콘센트"],
+    intentPatterns: ["전력 계획이 필요하다", "전기 배치를 하고 싶다"],
+  },
+  {
+    taskId: "SITE-012",
+    taskName: "Network & Connectivity",
+    domain: "site",
+    keywords: ["네트워크", "WiFi", "인터넷", "connectivity", "통신"],
+    intentPatterns: ["네트워크를 설치하고 싶다", "WiFi가 필요하다"],
+  },
+  {
+    taskId: "SITE-013",
+    taskName: "AV & Technical Setup",
+    domain: "site",
+    keywords: ["AV", "음향", "영상", "기술 장비", "스크린"],
+    intentPatterns: ["AV 장비를 설치하고 싶다", "기술 셋업이 필요하다"],
+  },
+  {
+    taskId: "SITE-014",
+    taskName: "Accessibility Compliance",
+    domain: "site",
+    keywords: ["접근성", "accessibility", "장애인", "휠체어", "배리어프리"],
+    intentPatterns: ["접근성을 확보하고 싶다", "장애인 편의를 계획하고 싶다"],
+  },
+  {
+    taskId: "SITE-015",
+    taskName: "Emergency Procedures",
+    domain: "site",
+    keywords: ["비상 절차", "emergency", "대피", "응급", "긴급"],
+    intentPatterns: ["비상 절차를 수립하고 싶다", "긴급 상황 대응이 필요하다"],
+  },
+  {
+    taskId: "SITE-016",
+    taskName: "Vendor Coordination",
+    domain: "site",
+    keywords: ["공급업체", "vendor", "협력사", "외주"],
+    intentPatterns: ["공급업체를 조율하고 싶다", "벤더 관리가 필요하다"],
+  },
+  {
+    taskId: "SITE-017",
+    taskName: "Parking & Traffic",
+    domain: "site",
+    keywords: ["주차", "교통", "parking", "traffic", "차량"],
+    intentPatterns: ["주차를 계획하고 싶다", "교통 관리가 필요하다"],
+  },
+  {
+    taskId: "SITE-018",
+    taskName: "Waste Management",
+    domain: "site",
+    keywords: ["폐기물", "쓰레기", "waste", "청소", "분리수거"],
+    intentPatterns: ["폐기물 관리가 필요하다", "쓰레기 처리를 계획하고 싶다"],
+  },
+  {
+    taskId: "SITE-019",
+    taskName: "Cleaning Services",
+    domain: "site",
+    keywords: ["청소", "cleaning", "위생", "미화"],
+    intentPatterns: ["청소 서비스가 필요하다", "위생 관리를 계획하고 싶다"],
+  },
+  {
+    taskId: "SITE-020",
+    taskName: "Site Operations Report",
+    domain: "site",
+    keywords: ["사이트 보고", "현장 보고", "운영 리포트"],
+    intentPatterns: ["사이트 운영을 보고하고 싶다", "현장 상황을 정리하고 싶다"],
+  },
+
+  // ============ SITE DOMAIN - Skill 16: Housing Management (SITE-021~040) ============
+  {
+    taskId: "SITE-021",
+    taskName: "Hotel Block Negotiation",
+    domain: "site",
+    keywords: ["호텔 블록", "숙박 협상", "hotel block", "객실 계약"],
+    intentPatterns: ["호텔 블록을 협상하고 싶다", "객실 계약이 필요하다"],
+  },
+  {
+    taskId: "SITE-022",
+    taskName: "Room Allocation",
+    domain: "site",
+    keywords: ["객실 배정", "room allocation", "방 배치"],
+    intentPatterns: ["객실을 배정하고 싶다", "방 배치가 필요하다"],
+  },
+  {
+    taskId: "SITE-023",
+    taskName: "Guest Accommodation",
+    domain: "site",
+    keywords: ["게스트 숙박", "guest accommodation", "VIP 숙소"],
+    intentPatterns: ["게스트 숙박을 관리하고 싶다", "VIP 숙소가 필요하다"],
+  },
+  {
+    taskId: "SITE-024",
+    taskName: "Housing Inventory",
+    domain: "site",
+    keywords: ["숙박 인벤토리", "housing inventory", "객실 현황"],
+    intentPatterns: ["숙박 현황을 파악하고 싶다", "객실 인벤토리가 필요하다"],
+  },
+  {
+    taskId: "SITE-025",
+    taskName: "Housing Budget",
+    domain: "site",
+    keywords: ["숙박 예산", "housing budget", "숙박비"],
+    intentPatterns: ["숙박 예산을 관리하고 싶다", "숙박비를 계획하고 싶다"],
+  },
+  {
+    taskId: "SITE-026",
+    taskName: "Housing Invoicing",
+    domain: "site",
+    keywords: ["숙박 인보이스", "housing invoice", "숙박 청구"],
+    intentPatterns: ["숙박 인보이스를 관리하고 싶다", "숙박비 청구가 필요하다"],
+  },
+  {
+    taskId: "SITE-027",
+    taskName: "Check-in/Check-out Management",
+    domain: "site",
+    keywords: ["체크인", "체크아웃", "check-in", "check-out"],
+    intentPatterns: ["체크인을 관리하고 싶다", "체크아웃 일정이 필요하다"],
+  },
+  {
+    taskId: "SITE-028",
+    taskName: "Rooming List Management",
+    domain: "site",
+    keywords: ["루밍 리스트", "rooming list", "숙박 명단"],
+    intentPatterns: ["루밍 리스트를 관리하고 싶다", "숙박 명단이 필요하다"],
+  },
+  {
+    taskId: "SITE-029",
+    taskName: "Housing-Transportation Coordination",
+    domain: "site",
+    keywords: ["숙박 교통", "셔틀", "transportation", "이동"],
+    intentPatterns: ["숙박과 교통을 연계하고 싶다", "셔틀이 필요하다"],
+  },
+  {
+    taskId: "SITE-030",
+    taskName: "VIP Housing Management",
+    domain: "site",
+    keywords: ["VIP 숙박", "VIP housing", "귀빈 숙소"],
+    intentPatterns: ["VIP 숙박을 관리하고 싶다", "귀빈 숙소가 필요하다"],
+  },
+  {
+    taskId: "SITE-031",
+    taskName: "Attrition Management",
+    domain: "site",
+    keywords: ["감실", "attrition", "미사용 객실", "패널티"],
+    intentPatterns: ["감실을 관리하고 싶다", "감실 패널티를 줄이고 싶다"],
+  },
+  {
+    taskId: "SITE-032",
+    taskName: "Housing Communications",
+    domain: "site",
+    keywords: ["숙박 안내", "housing communication", "숙박 공지"],
+    intentPatterns: ["숙박 안내를 보내고 싶다", "숙박 관련 소통이 필요하다"],
+  },
+  {
+    taskId: "SITE-033",
+    taskName: "Post-Event Reconciliation",
+    domain: "site",
+    keywords: ["사후 정산", "reconciliation", "숙박 정산"],
+    intentPatterns: ["숙박비를 정산하고 싶다", "사후 정산이 필요하다"],
+  },
+  {
+    taskId: "SITE-034",
+    taskName: "Group Room Block Management",
+    domain: "site",
+    keywords: ["그룹 룸", "group block", "단체 숙박"],
+    intentPatterns: ["그룹 숙박을 관리하고 싶다", "단체 객실이 필요하다"],
+  },
+  {
+    taskId: "SITE-035",
+    taskName: "Housing Reporting",
+    domain: "site",
+    keywords: ["숙박 리포트", "housing report", "숙박 현황 보고"],
+    intentPatterns: ["숙박 현황을 보고하고 싶다", "숙박 리포트가 필요하다"],
+  },
+  {
+    taskId: "SITE-036",
+    taskName: "Hotel Service Level Management",
+    domain: "site",
+    keywords: ["호텔 서비스", "service level", "SLA"],
+    intentPatterns: ["호텔 서비스를 관리하고 싶다", "서비스 수준이 필요하다"],
+  },
+  {
+    taskId: "SITE-037",
+    taskName: "Room Block Release",
+    domain: "site",
+    keywords: ["블록 릴리스", "room release", "객실 반납"],
+    intentPatterns: ["객실 블록을 릴리스하고 싶다", "미사용 객실을 반납하고 싶다"],
+  },
+  {
+    taskId: "SITE-038",
+    taskName: "Housing Compliance",
+    domain: "site",
+    keywords: ["숙박 컴플라이언스", "housing compliance", "규정 준수"],
+    intentPatterns: ["숙박 규정을 준수하고 싶다", "컴플라이언스 확인이 필요하다"],
+  },
+  {
+    taskId: "SITE-039",
+    taskName: "Housing Technology Integration",
+    domain: "site",
+    keywords: ["숙박 기술", "housing tech", "시스템 연동"],
+    intentPatterns: ["숙박 시스템을 연동하고 싶다", "기술 통합이 필요하다"],
+  },
+  {
+    taskId: "SITE-040",
+    taskName: "Housing Emergency Response",
+    domain: "site",
+    keywords: ["숙박 비상", "housing emergency", "긴급 대응"],
+    intentPatterns: ["숙박 비상 상황에 대응하고 싶다", "긴급 대피가 필요하다"],
+  },
 ];
 
 // =============================================================================
@@ -2225,7 +2509,7 @@ This system is ONLY for EVENT PLANNING and MANAGEMENT. If the question is about:
 
 You MUST return "out_of_scope" domain with taskId "NONE".
 
-## Available Agents (322 total)
+## Available Agents (362 total)
 
 ### Strategy Domain (STR-001~054) - CMP-IS Domain A: Strategic Planning
 **Skill 1: Goal Setting (STR-001~013)**
@@ -2291,6 +2575,15 @@ You MUST return "out_of_scope" domain with taskId "NONE".
 - MTG-021~030: 연사 섭외/프로필/소통/사례금/여행 조율, 초록 관리, 심사, 발표 가이드, 콘텐츠 수집/검토
 - MTG-031~040: CE/CME 학점, 리허설, 스피커룸, 녹화, 온디맨드, 피드백 분석, 콘텐츠 재활용, 앱 콘텐츠, 발표집, 연사 인정
 
+### Site Domain (SITE-001~040) - CMP-IS Domain H: Site Management
+**Skill 15: Site Selection & Design (SITE-001~020)**
+- SITE-001~010: 사이트 선정, 베뉴 계약, 현장 답사, 평면도 설계, 안전/보안 계획, 동선 설계, 물류 계획, 장비 관리
+- SITE-011~020: 셋업/철거 관리, 세션룸 배치, AV 기술, 전력 인프라, 폐기물/지속가능성, 온도관리, 비상계획, 허가/컴플라이언스, 장식, 접근성, 현장 기술
+
+**Skill 16: Housing Management (SITE-021~040)**
+- SITE-021~030: 호텔 블록 협상, 객실 배정, 숙박 인벤토리, 숙박 예산, 인보이스, 체크인/아웃, 루밍 리스트, 교통 조율, VIP 숙박
+- SITE-031~040: 감실 관리, 숙박 커뮤니케이션, 정산, 그룹 블록, 숙박 보고, 서비스 레벨, 블록 릴리스, 컴플라이언스, 기술 통합, 비상 대응
+
 ## ROUTING RULES
 
 1. **Out-of-Scope Check FIRST**: If NOT related to event management, return out_of_scope immediately
@@ -2304,6 +2597,7 @@ You MUST return "out_of_scope" domain with taskId "NONE".
    - Questions about VENUE, SITE, F&B, CATERING, AV, LIGHTING, SECURITY, REGISTRATION, LOGISTICS → Operations (OPS-*)
    - Questions about STAFF, RECRUITMENT, TRAINING, PAYROLL, VOLUNTEER, SCHEDULING, ATTENDANCE, ONBOARDING → HR (HR-*)
    - Questions about PROGRAM, SESSIONS, SPEAKERS, PRESENTERS, TRACKS, KEYNOTE, ABSTRACTS, CONTENT, CE/CME → Meetings (MTG-*)
+   - Questions about SITE SELECTION, VENUE CONTRACT, FLOOR PLAN, SETUP, TEARDOWN, HOUSING, HOTEL BLOCKS, ROOM ALLOCATION, VIP HOUSING, TRANSPORTATION → Site (SITE-*)
 4. **Specificity**: Choose the most specific agent that matches the intent
 5. **Confidence**: Rate your confidence from 0.0 to 1.0
 
@@ -2311,8 +2605,8 @@ You MUST return "out_of_scope" domain with taskId "NONE".
 
 You MUST respond with ONLY a valid JSON object:
 {
-  "taskId": "FIN-001 or STR-001 or PRJ-001 or MKT-001 or OPS-001 or HR-001 or MTG-001 or NONE",
-  "domain": "finance" or "strategy" or "project" or "marketing" or "operations" or "hr" or "meetings" or "out_of_scope",
+  "taskId": "FIN-001 or STR-001 or PRJ-001 or MKT-001 or OPS-001 or HR-001 or MTG-001 or SITE-001 or NONE",
+  "domain": "finance" or "strategy" or "project" or "marketing" or "operations" or "hr" or "meetings" or "site" or "out_of_scope",
   "confidence": 0.85,
   "reasoning": "Brief explanation of why this agent was selected or why it's out of scope"
 }
@@ -2441,6 +2735,16 @@ CRITICAL: Output ONLY the JSON object, nothing else.`;
       "면접", "interview", "계약", "contract",
       "성과", "performance", "평가", "피드백", "feedback",
       "복지", "welfare", "휴식", "break",
+      // Site Domain keywords
+      "사이트", "site", "현장 답사", "베뉴 계약", "venue contract",
+      "평면도", "floor plan", "동선", "flow", "물류", "logistics",
+      "셋업", "setup", "철거", "teardown", "load-out",
+      "전력", "power", "인프라", "infrastructure",
+      "하우징", "housing", "호텔 블록", "hotel block", "객실 배정", "room allocation",
+      "루밍 리스트", "rooming list", "체크인", "check-in", "체크아웃", "check-out",
+      "VIP 숙박", "VIP housing", "감실", "attrition",
+      "컴플라이언스", "compliance", "허가", "permit",
+      "지속가능성", "sustainability", "폐기물", "waste",
     ];
 
     // 이벤트 관련 키워드가 있으면 out-of-scope 아님

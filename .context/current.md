@@ -2,22 +2,23 @@
 
 ## 최근 완료 (2026-01-03)
 
-### Domain G: Meetings & Contents 구현 완료 v0.8.2
+### Domain H: Site Management 구현 완료 v0.8.3
 
 #### 완료된 작업
 
-1. **40개 MTG 에이전트 추가 (327개 총합)**
-   - Skill 13 (MTG-001~020): Program Design
-   - Skill 14 (MTG-021~040): Speaker & Content Management
+1. **40개 SITE 에이전트 추가 (362개 총합)**
+   - Skill 15 (SITE-001~020): Site Selection & Design
+   - Skill 16 (SITE-021~040): Housing Management
 
 2. **Router 통합**
-   - 도메인 타입에 "meetings" 추가
-   - AGENT_CATALOG에 40개 MTG 에이전트 등록
-   - domainPatterns에 meetings 키워드 추가
+   - 도메인 타입에 "site" 추가
+   - AGENT_CATALOG에 40개 SITE 에이전트 등록
+   - eventRelatedPatterns에 site/housing 키워드 추가
 
-3. **Context Bridge G 도메인 연동**
-
-4. **SYS-006 Guardian MTG prefix 인식**
+3. **Guardian 규칙 확장**
+   - RULE-008: Hotel Block Contract (50실 이상)
+   - RULE-009: Room Block Release (20실 이상)
+   - RULE-010: Venue Contract Signature
 
 ---
 
@@ -30,10 +31,11 @@
 | Financial Management | D | 68 | 7, 8, 9 | Active |
 | Operations Management | E | 40 | 9, 10 | Active |
 | Human Resources | F | 40 | 11, 12 | Active |
-| **Meetings & Contents** | **G** | **40** | **13, 14** | **Active** |
-| **Domain Total** | | **322** | | |
+| Meetings & Contents | G | 40 | 13, 14 | Active |
+| **Site Management** | **H** | **40** | **15, 16** | **Active** |
+| **Domain Total** | | **362** | | |
 | **System Agents** | SYS | **5** | - | Active |
-| **Grand Total** | | **327** | | |
+| **Grand Total** | | **367** | | |
 
 ## System Agents (5개)
 | ID | 이름 | 역할 |
@@ -51,7 +53,7 @@
 | `POST /ask` | 자연어 질문 → 라우팅 → 실행 |
 | `POST /ask/route` | 라우팅만 (실행 없음) |
 | `GET /ask/catalog` | 에이전트 카탈로그 |
-| `GET /health` | 시스템 헬스체크 (327 에이전트, 7 도메인) |
+| `GET /health` | 시스템 헬스체크 (367 에이전트, 8 도메인) |
 | `GET /finance/agents` | Finance 에이전트 목록 (68개) |
 | `GET /strategy/agents` | Strategy 에이전트 목록 (54개) |
 | `GET /project/agents` | Project 에이전트 목록 (40개) |
@@ -59,16 +61,17 @@
 | `GET /operations/agents` | Operations 에이전트 목록 (40개) |
 | `GET /hr/agents` | HR 에이전트 목록 (40개) |
 | `GET /meetings/agents` | Meetings 에이전트 목록 (40개) |
+| `GET /site/agents` | Site 에이전트 목록 (40개) |
 
 ## 배포 정보
 - **URL**: https://event-agent-api.pd-302.workers.dev
-- **Version**: 0.8.2
-- **Active Domains**: 7개 (A~G 전체)
-- **Total Agents**: 327개 (322 도메인 + 5 시스템)
+- **Version**: 0.8.3
+- **Active Domains**: 8개 (A~H 전체)
+- **Total Agents**: 367개 (362 도메인 + 5 시스템)
 - **Features**:
-  - Intelligent Router (7 도메인)
+  - Intelligent Router (8 도메인)
   - ExecutionPlan for Complex Queries
-  - Guardian Agent (Input Validation)
+  - Guardian Agent (Input Validation + Site Domain Rules)
   - Cross-Domain Context Bridge
   - RAG Knowledge Retriever
   - Session Memory

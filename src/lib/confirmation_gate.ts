@@ -236,6 +236,61 @@ export const DEFAULT_RULES: ConfirmationRule[] = [
     timeout_minutes: 30,
     timeout_action: "reject",
   },
+
+  // 8. Hotel Block Contract (Site Domain)
+  {
+    id: "RULE-008",
+    name: "Hotel Block Contract",
+    description: "호텔 블록 계약 또는 대규모 객실 예약",
+    condition: (input, context) => {
+      if (!context.agent_id.startsWith("SITE-")) return false;
+      const roomFields = ["rooms_blocked", "total_rooms", "room_count"];
+      for (const field of roomFields) {
+        const value = input[field];
+        if (typeof value === "number" && value >= 50) return true;
+      }
+      return false;
+    },
+    change_type: "high_value",
+    risk_level: "high",
+    message_template: "대규모 호텔 블록 계약입니다 (50실 이상). 승인이 필요합니다.",
+    timeout_minutes: 120,
+    timeout_action: "reject",
+  },
+
+  // 9. Room Block Release (Site Domain)
+  {
+    id: "RULE-009",
+    name: "Room Block Release",
+    description: "객실 블록 릴리스",
+    condition: (input, context) => {
+      if (context.agent_id !== "SITE-037") return false;
+      const releaseRooms = input.rooms_to_release;
+      return typeof releaseRooms === "number" && releaseRooms >= 20;
+    },
+    change_type: "irreversible",
+    risk_level: "medium",
+    message_template: "객실 블록 릴리스 작업입니다 (20실 이상). 릴리스 후 재확보가 어려울 수 있습니다.",
+    timeout_minutes: 60,
+    timeout_action: "reject",
+  },
+
+  // 10. Venue Contract Signature (Site Domain)
+  {
+    id: "RULE-010",
+    name: "Venue Contract Signature",
+    description: "베뉴 계약 서명",
+    condition: (input, context) => {
+      if (context.agent_id !== "SITE-002") return false;
+      const status = String(input.contract_status || "").toLowerCase();
+      return status.includes("sign") || status.includes("execute") || status.includes("finalize");
+    },
+    change_type: "irreversible",
+    risk_level: "critical",
+    message_template: "베뉴 계약 서명 작업입니다. 법적 구속력이 발생합니다. 진행하시겠습니까?",
+    timeout_minutes: 120,
+    timeout_action: "reject",
+  },
 ];
 
 // =============================================================================
