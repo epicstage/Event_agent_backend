@@ -1,5 +1,38 @@
 # 작업 이력
 
+## 2026-01-03: Domain J Professionalism 20개 에이전트 배포 (v0.9.0)
+
+### 완료된 작업
+1. **PRO 20개 에이전트 구현** (PRO-001 ~ PRO-020)
+   - Skill 19: Ethics & Standards (PRO-001~010) - 10개
+   - Skill 20: Professional Development (PRO-011~020) - 10개
+
+2. **registry.ts 신규 생성**
+   - `src/agents/pro/registry.ts`
+   - `src/agents/site/registry.ts` 필드명 수정
+
+3. **Guardian 5개 규칙 추가** (RULE-016~020)
+   - Privacy Data Access
+   - Large Certification Budget
+   - Compliance Violation Report
+   - Whistleblower Report
+   - Legal Liability Assessment
+
+4. **Router 업데이트**
+   - professionalism 도메인 라우팅
+   - PRO 키워드 패턴 추가
+
+### 배포 정보
+- Version: 0.9.0
+- URL: https://event-agent-api.pd-302.workers.dev
+- 총 에이전트: 387개 (382 도메인 + 5 시스템)
+
+### 검증 결과
+- `/ask` PRO-001 윤리 강령 준수 → 정상 실행
+- `/ask` PRO-016 전문성 개발 → 정상 라우팅
+
+---
+
 ## 2026-01-03: Domain A Strategic Planning 54개 에이전트 완성
 
 ### 완료된 작업
@@ -894,3 +927,101 @@
 - [2026-01-03 20:30:11] Edit: router.ts
 - [2026-01-03 20:31:23] Edit: confirmation_gate.ts
 - [2026-01-03 20:34:26] Write: current.md
+- [2026-01-03 20:48:05] Write: 012_advanced_marketing.sql
+- [2026-01-03 20:51:24] Write: MKTADV_001_MarketingDataAnalysis.ts
+- [2026-01-03 20:51:39] Write: MKTADV_002_DemandForecasting.ts
+- [2026-01-03 20:51:54] Write: MKTADV_003_ROIMeasurement.ts
+- [2026-01-03 20:52:10] Write: MKTADV_004_CompetitorAnalysis.ts
+- [2026-01-03 20:52:25] Write: MKTADV_005_ConversionTracking.ts
+- [2026-01-03 20:54:45] Write: MKTADV_006_AudienceSegmentation.ts
+- [2026-01-03 20:55:00] Write: MKTADV_007_CampaignPerformance.ts
+- [2026-01-03 20:55:15] Write: MKTADV_008_AttributionModeling.ts
+- [2026-01-03 20:55:30] Write: MKTADV_009_ABTestAnalysis.ts
+- [2026-01-03 20:55:46] Write: MKTADV_010_SocialListening.ts
+- [2026-01-03 20:58:03] Write: MKTADV_011_PredictiveAnalytics.ts
+- [2026-01-03 20:58:19] Write: MKTADV_012_CustomerJourneyMapping.ts
+- [2026-01-03 20:58:34] Write: MKTADV_013_BrandHealthTracking.ts
+- [2026-01-03 20:58:49] Write: MKTADV_014_MarketTrendAnalysis.ts
+- [2026-01-03 20:59:05] Write: MKTADV_015_ContentPerformance.ts
+- [2026-01-03 21:02:26] Write: MKTADV_016_EmailPerformance.ts
+- [2026-01-03 21:02:41] Write: MKTADV_017_ChannelMixOptimization.ts
+- [2026-01-03 21:02:57] Write: MKTADV_018_MarketingDashboard.ts
+- [2026-01-03 21:03:12] Write: MKTADV_019_ReportingAutomation.ts
+- [2026-01-03 21:03:27] Write: MKTADV_020_MarketingInsightsSummary.ts
+- [2026-01-03 21:05:43] Write: MKTADV_021_CRMIntegration.ts
+- [2026-01-03 21:05:58] Write: MKTADV_022_LeadScoring.ts
+- [2026-01-03 21:06:13] Write: MKTADV_023_LeadNurturing.ts
+- [2026-01-03 21:06:28] Write: MKTADV_024_PersonalizationEngine.ts
+- [2026-01-03 21:06:44] Write: MKTADV_025_BehaviorTracking.ts
+- [2026-01-03 21:08:49] Write: MKTADV_026_RetargetingCampaign.ts
+- [2026-01-03 21:09:04] Write: MKTADV_027_CustomerLifetimeValue.ts
+- [2026-01-03 21:09:20] Write: MKTADV_028_ChurnPrediction.ts
+- [2026-01-03 21:09:35] Write: MKTADV_029_LoyaltyProgram.ts
+- [2026-01-03 21:09:50] Write: MKTADV_030_ReferralProgram.ts
+- [2026-01-03 21:12:07] Write: MKTADV_031_PostEventFollowUp.ts
+- [2026-01-03 21:12:23] Write: MKTADV_032_FeedbackAnalysis.ts
+- [2026-01-03 21:12:38] Write: MKTADV_033_CommunityManagement.ts
+- [2026-01-03 21:12:53] Write: MKTADV_034_AdvocacyProgram.ts
+- [2026-01-03 21:13:08] Write: MKTADV_035_DataEnrichment.ts
+- [2026-01-03 21:15:33] Write: MKTADV_036_DataPrivacyCompliance.ts
+- [2026-01-03 21:15:49] Write: MKTADV_037_MarketingAutomation.ts
+- [2026-01-03 21:16:04] Write: MKTADV_038_WorkflowOptimization.ts
+- [2026-01-03 21:16:19] Write: MKTADV_039_CrossSellUpsell.ts
+- [2026-01-03 21:16:35] Write: MKTADV_040_RevenueAttribution.ts
+- [2026-01-03 21:17:26] Write: index.ts
+- [2026-01-03 21:17:42] Write: index.ts
+- [2026-01-03 21:17:57] Write: index.ts
+- [2026-01-03 21:21:36] Edit: confirmation_gate.ts
+- [2026-01-03 21:23:03] Edit: router.ts
+- [2026-01-03 21:24:22] Edit: router.ts
+- [2026-01-03 21:24:37] Edit: router.ts
+- [2026-01-03 21:24:53] Edit: router.ts
+- [2026-01-03 21:26:21] Edit: MKTADV_007_CampaignPerformance.ts
+- [2026-01-03 21:42:37] Write: 013_professionalism.sql
+- [2026-01-03 21:45:17] Write: PRO_001_EthicsCodeCompliance.ts
+- [2026-01-03 21:45:32] Write: PRO_002_IndustryStandardsAdherence.ts
+- [2026-01-03 21:45:48] Write: PRO_003_BusinessEtiquette.ts
+- [2026-01-03 21:49:31] Write: PRO_004_VendorEthicsScreening.ts
+- [2026-01-03 21:49:46] Write: PRO_005_SustainabilityStandards.ts
+- [2026-01-03 21:50:01] Write: PRO_006_DEICompliance.ts
+- [2026-01-03 21:50:16] Write: PRO_007_ConflictOfInterest.ts
+- [2026-01-03 21:50:32] Write: PRO_008_GiftPolicyManagement.ts
+- [2026-01-03 21:50:47] Write: PRO_009_WhistleblowerProtection.ts
+- [2026-01-03 21:51:02] Write: PRO_010_ProfessionalConduct.ts
+- [2026-01-03 21:57:33] Write: PRO_011_LegalRiskReview.ts
+- [2026-01-03 21:57:48] Write: PRO_012_ContractCompliance.ts
+- [2026-01-03 21:58:03] Write: PRO_013_PrivacyCompliance.ts
+- [2026-01-03 21:58:18] Write: PRO_014_IntellectualPropertyProtection.ts
+- [2026-01-03 21:58:34] Write: PRO_015_RegulatoryCompliance.ts
+- [2026-01-03 21:58:49] Write: PRO_016_ProfessionalCertificationManagement.ts
+- [2026-01-03 21:59:04] Write: PRO_017_ContinuingEducationTracking.ts
+- [2026-01-03 21:59:20] Write: PRO_018_SelfDevelopmentPlanning.ts
+- [2026-01-03 21:59:35] Write: PRO_019_MentorshipProgram.ts
+- [2026-01-03 21:59:50] Write: PRO_020_CareerDevelopment.ts
+- [2026-01-03 22:00:51] Write: index.ts
+- [2026-01-03 22:01:06] Write: index.ts
+- [2026-01-03 22:01:22] Write: index.ts
+- [2026-01-03 22:09:02] Edit: confirmation_gate.ts
+- [2026-01-03 22:10:02] Edit: router.ts
+- [2026-01-03 22:10:17] Edit: router.ts
+- [2026-01-03 22:10:32] Edit: router.ts
+- [2026-01-03 22:11:30] Edit: router.ts
+- [2026-01-03 22:12:00] Edit: router.ts
+- [2026-01-03 22:14:16] Edit: router.ts
+- [2026-01-03 22:14:48] Edit: router.ts
+- [2026-01-03 22:15:13] Edit: router.ts
+- [2026-01-03 22:15:39] Edit: router.ts
+- [2026-01-03 22:22:02] Write: registry.ts
+- [2026-01-03 22:25:20] Edit: index.ts
+- [2026-01-03 22:26:09] Write: registry.ts
+- [2026-01-03 22:26:32] Edit: ask.ts
+- [2026-01-03 22:26:55] Edit: ask.ts
+- [2026-01-03 22:27:22] Edit: ask.ts
+- [2026-01-03 22:27:50] Edit: ask.ts
+- [2026-01-03 22:31:08] Edit: registry.ts
+- [2026-01-03 22:31:40] Edit: registry.ts
+- [2026-01-03 22:32:21] Edit: registry.ts
+- [2026-01-03 22:34:23] Edit: registry.ts
+- [2026-01-03 22:36:15] Edit: registry.ts
+- [2026-01-03 22:43:54] Write: current.md
+- [2026-01-03 22:44:43] Edit: history.md

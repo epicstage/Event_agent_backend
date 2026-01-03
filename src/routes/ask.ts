@@ -16,6 +16,9 @@ import { executeAgentWithLLM as executeProjectAgent } from "../agents/project/re
 import { executeAgentWithLLM as executeMarketingAgent } from "../agents/marketing/registry";
 import { executeAgentWithLLM as executeOperationsAgent } from "../agents/operations/registry";
 import { executeAgentWithLLM as executeHRAgent } from "../agents/hr/registry";
+import { executeAgentWithLLM as executeMeetingsAgent } from "../agents/meetings/registry";
+import { executeAgentWithLLM as executeSiteAgent } from "../agents/site/registry";
+import { executeAgentWithLLM as executeProAgent } from "../agents/pro/registry";
 import {
   getSessionContext,
   addConversation,
@@ -81,6 +84,9 @@ ask.post("/route", async (c) => {
       marketing: "/marketing/agents/execute-with-llm",
       operations: "/operations/agents/execute-with-llm",
       hr: "/hr/agents/execute-with-llm",
+      meetings: "/meetings/agents/execute-with-llm",
+      site: "/site/agents/execute-with-llm",
+      professionalism: "/professionalism/agents/execute-with-llm",
     };
 
     return c.json({
@@ -226,6 +232,30 @@ ask.post("/", async (c) => {
         shortTermMemory,
         sessionContext?.preferences
       );
+    } else if (routeResult.domain === "meetings") {
+      agentResult = await executeMeetingsAgent(
+        routeResult.taskId,
+        agentInput,
+        c.env.AI,
+        shortTermMemory,
+        sessionContext?.preferences
+      );
+    } else if (routeResult.domain === "site") {
+      agentResult = await executeSiteAgent(
+        routeResult.taskId,
+        agentInput,
+        c.env.AI,
+        shortTermMemory,
+        sessionContext?.preferences
+      );
+    } else if (routeResult.domain === "professionalism") {
+      agentResult = await executeProAgent(
+        routeResult.taskId,
+        agentInput,
+        c.env.AI,
+        shortTermMemory,
+        sessionContext?.preferences
+      );
     } else {
       // Fallback - should not reach here due to out-of-scope check above
       return c.json({
@@ -300,6 +330,9 @@ ask.get("/catalog", (c) => {
     finance: catalog.filter((a: { domain: string }) => a.domain === "finance"),
     operations: catalog.filter((a: { domain: string }) => a.domain === "operations"),
     hr: catalog.filter((a: { domain: string }) => a.domain === "hr"),
+    meetings: catalog.filter((a: { domain: string }) => a.domain === "meetings"),
+    site: catalog.filter((a: { domain: string }) => a.domain === "site"),
+    professionalism: catalog.filter((a: { domain: string }) => a.domain === "professionalism"),
   };
 
   return c.json({
@@ -312,6 +345,9 @@ ask.get("/catalog", (c) => {
       finance: byDomain.finance.length,
       operations: byDomain.operations.length,
       hr: byDomain.hr.length,
+      meetings: byDomain.meetings.length,
+      site: byDomain.site.length,
+      professionalism: byDomain.professionalism.length,
     },
     catalog: byDomain,
   });

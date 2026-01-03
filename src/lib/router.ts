@@ -4,7 +4,7 @@
  * Cloudflare Workers AI를 사용한 지능형 에이전트 라우터.
  * - 사용자 질문을 분석하여 가장 적합한 에이전트 선택
  * - Intent 기반 라우팅 (키워드 매칭 아님)
- * - STR-001~054 (54개) + PRJ-001~040 (40개) + MKT-001~040 (40개) + FIN-001~068 (68개) + OPS-001~040 (40개) + HR-001~040 (40개) + MTG-001~040 (40개) + SITE-001~040 (40개) = 총 362개 에이전트 지원
+ * - STR-001~054 (54개) + PRJ-001~040 (40개) + MKT-001~040 (40개) + FIN-001~068 (68개) + OPS-001~040 (40개) + HR-001~040 (40개) + MTG-001~040 (40개) + SITE-001~040 (40개) + MKTADV-001~040 (40개) + PRO-001~020 (20개) = 총 422개 에이전트 지원
  */
 
 // =============================================================================
@@ -22,7 +22,7 @@ export interface RouterInput {
 
 export interface RouterOutput {
   taskId: string;
-  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "site" | "out_of_scope";
+  domain: "finance" | "strategy" | "project" | "marketing" | "marketing_adv" | "operations" | "hr" | "meetings" | "site" | "professionalism" | "out_of_scope";
   confidence: number;
   reasoning: string;
   suggested_input?: Record<string, unknown>;
@@ -33,7 +33,7 @@ export interface RouterOutput {
 export interface ExecutionStep {
   stepNumber: number;
   taskId: string;
-  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "site";
+  domain: "finance" | "strategy" | "project" | "marketing" | "marketing_adv" | "operations" | "hr" | "meetings" | "site" | "professionalism";
   purpose: string;
   dependsOn: number[]; // 의존하는 이전 step 번호들
   inputMapping?: Record<string, string>; // 이전 step 출력에서 가져올 필드 매핑
@@ -55,7 +55,7 @@ export interface ComplexRouterOutput extends RouterOutput {
 export interface AgentMetadata {
   taskId: string;
   taskName: string;
-  domain: "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" | "meetings" | "site";
+  domain: "finance" | "strategy" | "project" | "marketing" | "marketing_adv" | "operations" | "hr" | "meetings" | "site" | "professionalism";
   keywords: string[];
   intentPatterns: string[];
 }
@@ -2441,6 +2441,434 @@ const AGENT_CATALOG: AgentMetadata[] = [
     keywords: ["숙박 비상", "housing emergency", "긴급 대응"],
     intentPatterns: ["숙박 비상 상황에 대응하고 싶다", "긴급 대피가 필요하다"],
   },
+
+  // ============ MARKETING ADVANCED DOMAIN - Skill 17: Marketing Analytics (MKTADV-001~020) ============
+  {
+    taskId: "MKTADV-001",
+    taskName: "Marketing Data Analysis",
+    domain: "marketing_adv",
+    keywords: ["마케팅 데이터", "marketing data", "데이터 분석", "마케팅 분석"],
+    intentPatterns: ["마케팅 데이터를 분석하고 싶다", "마케팅 성과를 측정하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-002",
+    taskName: "Demand Forecasting",
+    domain: "marketing_adv",
+    keywords: ["수요 예측", "demand forecasting", "참가자 예측", "등록 예측"],
+    intentPatterns: ["수요를 예측하고 싶다", "참가자 수를 예측하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-003",
+    taskName: "ROI Measurement",
+    domain: "marketing_adv",
+    keywords: ["ROI 측정", "마케팅 ROI", "투자수익률", "캠페인 ROI"],
+    intentPatterns: ["마케팅 ROI를 측정하고 싶다", "투자수익률을 계산하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-004",
+    taskName: "Competitor Analysis",
+    domain: "marketing_adv",
+    keywords: ["경쟁사 분석", "competitor analysis", "시장 경쟁", "경쟁 이벤트"],
+    intentPatterns: ["경쟁사를 분석하고 싶다", "경쟁 이벤트를 파악하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-005",
+    taskName: "Conversion Tracking",
+    domain: "marketing_adv",
+    keywords: ["전환 추적", "conversion tracking", "등록 전환", "퍼널 분석"],
+    intentPatterns: ["전환율을 추적하고 싶다", "등록 퍼널을 분석하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-006",
+    taskName: "Audience Segmentation",
+    domain: "marketing_adv",
+    keywords: ["오디언스 세분화", "audience segmentation", "타겟 세분화", "고객 분류"],
+    intentPatterns: ["오디언스를 세분화하고 싶다", "타겟 그룹을 나누고 싶다"],
+  },
+  {
+    taskId: "MKTADV-007",
+    taskName: "Campaign Performance",
+    domain: "marketing_adv",
+    keywords: ["캠페인 성과", "campaign performance", "광고 성과", "마케팅 캠페인"],
+    intentPatterns: ["캠페인 성과를 분석하고 싶다", "광고 효과를 측정하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-008",
+    taskName: "Attribution Modeling",
+    domain: "marketing_adv",
+    keywords: ["어트리뷰션", "attribution modeling", "성과 귀속", "채널 기여도"],
+    intentPatterns: ["어트리뷰션 모델을 적용하고 싶다", "채널별 기여도를 분석하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-009",
+    taskName: "A/B Test Analysis",
+    domain: "marketing_adv",
+    keywords: ["A/B 테스트", "split test", "실험 분석", "변형 테스트"],
+    intentPatterns: ["A/B 테스트를 분석하고 싶다", "실험 결과를 확인하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-010",
+    taskName: "Social Listening",
+    domain: "marketing_adv",
+    keywords: ["소셜 리스닝", "social listening", "SNS 모니터링", "버즈 분석"],
+    intentPatterns: ["소셜 반응을 모니터링하고 싶다", "SNS 버즈를 분석하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-011",
+    taskName: "Predictive Analytics",
+    domain: "marketing_adv",
+    keywords: ["예측 분석", "predictive analytics", "행동 예측", "ML 예측"],
+    intentPatterns: ["예측 분석을 하고 싶다", "고객 행동을 예측하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-012",
+    taskName: "Customer Journey Mapping",
+    domain: "marketing_adv",
+    keywords: ["고객 여정", "customer journey", "터치포인트 분석", "여정 맵"],
+    intentPatterns: ["고객 여정을 매핑하고 싶다", "터치포인트를 분석하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-013",
+    taskName: "Brand Health Tracking",
+    domain: "marketing_adv",
+    keywords: ["브랜드 건강", "brand health", "브랜드 인지도", "브랜드 추적"],
+    intentPatterns: ["브랜드 건강을 추적하고 싶다", "브랜드 인지도를 측정하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-014",
+    taskName: "Market Trend Analysis",
+    domain: "marketing_adv",
+    keywords: ["시장 트렌드", "market trend", "업계 동향", "트렌드 분석"],
+    intentPatterns: ["시장 트렌드를 분석하고 싶다", "업계 동향을 파악하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-015",
+    taskName: "Content Performance",
+    domain: "marketing_adv",
+    keywords: ["콘텐츠 성과", "content performance", "콘텐츠 분석", "콘텐츠 효과"],
+    intentPatterns: ["콘텐츠 성과를 분석하고 싶다", "콘텐츠 효과를 측정하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-016",
+    taskName: "Email Performance",
+    domain: "marketing_adv",
+    keywords: ["이메일 성과", "email performance", "이메일 분석", "오픈율"],
+    intentPatterns: ["이메일 성과를 분석하고 싶다", "이메일 캠페인을 최적화하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-017",
+    taskName: "Channel Mix Optimization",
+    domain: "marketing_adv",
+    keywords: ["채널 믹스", "channel mix", "채널 최적화", "미디어 믹스"],
+    intentPatterns: ["채널 믹스를 최적화하고 싶다", "마케팅 채널을 조정하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-018",
+    taskName: "Marketing Dashboard",
+    domain: "marketing_adv",
+    keywords: ["마케팅 대시보드", "marketing dashboard", "KPI 대시보드", "성과 대시보드"],
+    intentPatterns: ["마케팅 대시보드를 만들고 싶다", "KPI를 모니터링하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-019",
+    taskName: "Reporting Automation",
+    domain: "marketing_adv",
+    keywords: ["리포팅 자동화", "reporting automation", "자동 보고서", "보고서 생성"],
+    intentPatterns: ["리포팅을 자동화하고 싶다", "보고서를 자동 생성하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-020",
+    taskName: "Marketing Insights Summary",
+    domain: "marketing_adv",
+    keywords: ["마케팅 인사이트", "marketing insights", "인사이트 요약", "분석 요약"],
+    intentPatterns: ["마케팅 인사이트를 정리하고 싶다", "분석 결과를 요약하고 싶다"],
+  },
+
+  // ============ MARKETING ADVANCED DOMAIN - Skill 18: CRM Integration (MKTADV-021~040) ============
+  {
+    taskId: "MKTADV-021",
+    taskName: "CRM Integration",
+    domain: "marketing_adv",
+    keywords: ["CRM 연동", "CRM integration", "고객 데이터 연동", "Salesforce"],
+    intentPatterns: ["CRM을 연동하고 싶다", "고객 데이터를 통합하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-022",
+    taskName: "Lead Scoring",
+    domain: "marketing_adv",
+    keywords: ["리드 스코어링", "lead scoring", "잠재고객 점수", "리드 평가"],
+    intentPatterns: ["리드를 점수화하고 싶다", "잠재고객을 평가하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-023",
+    taskName: "Lead Nurturing",
+    domain: "marketing_adv",
+    keywords: ["리드 너처링", "lead nurturing", "리드 육성", "잠재고객 육성"],
+    intentPatterns: ["리드를 너처링하고 싶다", "잠재고객을 육성하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-024",
+    taskName: "Personalization Engine",
+    domain: "marketing_adv",
+    keywords: ["개인화 엔진", "personalization", "맞춤 콘텐츠", "개인화 추천"],
+    intentPatterns: ["개인화를 적용하고 싶다", "맞춤 콘텐츠를 제공하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-025",
+    taskName: "Behavior Tracking",
+    domain: "marketing_adv",
+    keywords: ["행동 추적", "behavior tracking", "사용자 행동", "행동 분석"],
+    intentPatterns: ["행동을 추적하고 싶다", "사용자 행동을 분석하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-026",
+    taskName: "Retargeting Campaign",
+    domain: "marketing_adv",
+    keywords: ["리타겟팅", "retargeting", "재타겟팅", "리마케팅"],
+    intentPatterns: ["리타겟팅 캠페인을 만들고 싶다", "이탈자를 다시 타겟팅하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-027",
+    taskName: "Customer Lifetime Value",
+    domain: "marketing_adv",
+    keywords: ["고객 생애 가치", "CLV", "LTV", "customer lifetime value"],
+    intentPatterns: ["고객 생애 가치를 계산하고 싶다", "CLV를 분석하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-028",
+    taskName: "Churn Prediction",
+    domain: "marketing_adv",
+    keywords: ["이탈 예측", "churn prediction", "고객 이탈", "이탈 방지"],
+    intentPatterns: ["이탈을 예측하고 싶다", "고객 이탈을 방지하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-029",
+    taskName: "Loyalty Program",
+    domain: "marketing_adv",
+    keywords: ["로열티 프로그램", "loyalty program", "충성도 프로그램", "포인트 적립"],
+    intentPatterns: ["로열티 프로그램을 설계하고 싶다", "고객 충성도를 높이고 싶다"],
+  },
+  {
+    taskId: "MKTADV-030",
+    taskName: "Referral Program",
+    domain: "marketing_adv",
+    keywords: ["추천 프로그램", "referral program", "친구 추천", "바이럴 마케팅"],
+    intentPatterns: ["추천 프로그램을 만들고 싶다", "바이럴 마케팅을 하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-031",
+    taskName: "Post-Event Follow-Up",
+    domain: "marketing_adv",
+    keywords: ["이벤트 후속", "post-event", "후속 조치", "팔로우업"],
+    intentPatterns: ["이벤트 후 팔로우업을 하고 싶다", "후속 조치를 계획하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-032",
+    taskName: "Feedback Analysis",
+    domain: "marketing_adv",
+    keywords: ["피드백 분석", "feedback analysis", "설문 분석", "NPS 분석"],
+    intentPatterns: ["피드백을 분석하고 싶다", "설문 결과를 분석하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-033",
+    taskName: "Community Management",
+    domain: "marketing_adv",
+    keywords: ["커뮤니티 관리", "community management", "온라인 커뮤니티", "팬 커뮤니티"],
+    intentPatterns: ["커뮤니티를 관리하고 싶다", "온라인 커뮤니티를 운영하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-034",
+    taskName: "Advocacy Program",
+    domain: "marketing_adv",
+    keywords: ["옹호자 프로그램", "advocacy", "브랜드 앰배서더", "고객 옹호"],
+    intentPatterns: ["옹호자 프로그램을 만들고 싶다", "브랜드 앰배서더를 모집하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-035",
+    taskName: "Data Enrichment",
+    domain: "marketing_adv",
+    keywords: ["데이터 보강", "data enrichment", "데이터 강화", "프로필 보강"],
+    intentPatterns: ["데이터를 보강하고 싶다", "고객 프로필을 강화하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-036",
+    taskName: "Data Privacy Compliance",
+    domain: "marketing_adv",
+    keywords: ["데이터 프라이버시", "GDPR", "개인정보 보호", "데이터 규정"],
+    intentPatterns: ["데이터 규정을 준수하고 싶다", "GDPR 준수 상태를 확인하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-037",
+    taskName: "Marketing Automation",
+    domain: "marketing_adv",
+    keywords: ["마케팅 자동화", "marketing automation", "자동화 워크플로우", "드립 캠페인"],
+    intentPatterns: ["마케팅을 자동화하고 싶다", "자동화 워크플로우를 만들고 싶다"],
+  },
+  {
+    taskId: "MKTADV-038",
+    taskName: "Workflow Optimization",
+    domain: "marketing_adv",
+    keywords: ["워크플로우 최적화", "workflow optimization", "프로세스 개선", "효율화"],
+    intentPatterns: ["워크플로우를 최적화하고 싶다", "마케팅 프로세스를 개선하고 싶다"],
+  },
+  {
+    taskId: "MKTADV-039",
+    taskName: "Cross-Sell Upsell",
+    domain: "marketing_adv",
+    keywords: ["크로스셀", "업셀", "cross-sell", "upsell", "추가 판매"],
+    intentPatterns: ["크로스셀 기회를 찾고 싶다", "업셀 전략을 세우고 싶다"],
+  },
+  {
+    taskId: "MKTADV-040",
+    taskName: "Revenue Attribution",
+    domain: "marketing_adv",
+    keywords: ["매출 귀속", "revenue attribution", "매출 기여", "수익 분석"],
+    intentPatterns: ["매출 귀속을 분석하고 싶다", "마케팅 수익 기여도를 측정하고 싶다"],
+  },
+
+  // ============ PROFESSIONALISM DOMAIN - Skill 19: Ethics & Standards (PRO-001~010) ============
+  {
+    taskId: "PRO-001",
+    taskName: "Ethics Code Compliance",
+    domain: "professionalism",
+    keywords: ["윤리", "ethics", "윤리 강령", "행동 규범", "code of conduct"],
+    intentPatterns: ["윤리 강령을 확인하고 싶다", "윤리 준수 현황이 필요하다"],
+  },
+  {
+    taskId: "PRO-002",
+    taskName: "Industry Standards Adherence",
+    domain: "professionalism",
+    keywords: ["산업 표준", "industry standards", "ISO20121", "APEX", "MPI", "CIC"],
+    intentPatterns: ["산업 표준을 확인하고 싶다", "표준 준수 여부를 평가하고 싶다"],
+  },
+  {
+    taskId: "PRO-003",
+    taskName: "Business Etiquette",
+    domain: "professionalism",
+    keywords: ["비즈니스 에티켓", "business etiquette", "예절", "문화", "프로토콜"],
+    intentPatterns: ["비즈니스 에티켓이 필요하다", "국제 행사 예절을 알고 싶다"],
+  },
+  {
+    taskId: "PRO-004",
+    taskName: "Vendor Ethics Screening",
+    domain: "professionalism",
+    keywords: ["공급업체 윤리", "vendor ethics", "공급업체 심사", "윤리 평가"],
+    intentPatterns: ["공급업체 윤리를 평가하고 싶다", "벤더 심사가 필요하다"],
+  },
+  {
+    taskId: "PRO-005",
+    taskName: "Sustainability Standards",
+    domain: "professionalism",
+    keywords: ["지속가능성", "sustainability", "ESG", "탄소 발자국", "친환경"],
+    intentPatterns: ["지속가능성 표준을 확인하고 싶다", "친환경 이벤트를 기획하고 싶다"],
+  },
+  {
+    taskId: "PRO-006",
+    taskName: "DEI Compliance",
+    domain: "professionalism",
+    keywords: ["다양성", "DEI", "포용성", "형평성", "접근성"],
+    intentPatterns: ["DEI 준수 현황을 확인하고 싶다", "다양성을 높이고 싶다"],
+  },
+  {
+    taskId: "PRO-007",
+    taskName: "Conflict of Interest",
+    domain: "professionalism",
+    keywords: ["이해충돌", "conflict of interest", "COI", "이해관계"],
+    intentPatterns: ["이해충돌을 관리하고 싶다", "COI 신고가 필요하다"],
+  },
+  {
+    taskId: "PRO-008",
+    taskName: "Gift Policy Management",
+    domain: "professionalism",
+    keywords: ["선물 정책", "gift policy", "접대", "향응", "뇌물"],
+    intentPatterns: ["선물 정책을 확인하고 싶다", "선물 수령 규정이 필요하다"],
+  },
+  {
+    taskId: "PRO-009",
+    taskName: "Whistleblower Protection",
+    domain: "professionalism",
+    keywords: ["내부고발", "whistleblower", "제보", "익명 신고", "보호"],
+    intentPatterns: ["내부고발 채널이 필요하다", "제보자 보호 정책을 확인하고 싶다"],
+  },
+  {
+    taskId: "PRO-010",
+    taskName: "Professional Conduct",
+    domain: "professionalism",
+    keywords: ["전문가 행동", "professional conduct", "행동 지침", "품위"],
+    intentPatterns: ["전문가 행동 지침이 필요하다", "품위 유지 기준을 확인하고 싶다"],
+  },
+
+  // ============ PROFESSIONALISM DOMAIN - Skill 20: Legal Compliance & Professional Development (PRO-011~020) ============
+  {
+    taskId: "PRO-011",
+    taskName: "Legal Risk Review",
+    domain: "professionalism",
+    keywords: ["법적 리스크", "legal risk", "법률 검토", "법적 위험"],
+    intentPatterns: ["법적 리스크를 검토하고 싶다", "법률적 위험을 평가하고 싶다"],
+  },
+  {
+    taskId: "PRO-012",
+    taskName: "Contract Compliance",
+    domain: "professionalism",
+    keywords: ["계약 준수", "contract compliance", "계약 의무", "이행"],
+    intentPatterns: ["계약 준수 현황을 확인하고 싶다", "계약 의무를 점검하고 싶다"],
+  },
+  {
+    taskId: "PRO-013",
+    taskName: "Privacy Compliance",
+    domain: "professionalism",
+    keywords: ["개인정보", "privacy", "GDPR", "개인정보보호법", "동의"],
+    intentPatterns: ["개인정보 보호 준수를 확인하고 싶다", "GDPR 준수가 필요하다"],
+  },
+  {
+    taskId: "PRO-014",
+    taskName: "Intellectual Property Protection",
+    domain: "professionalism",
+    keywords: ["지적재산권", "IP", "저작권", "상표", "특허"],
+    intentPatterns: ["지적재산권을 보호하고 싶다", "저작권 문제를 확인하고 싶다"],
+  },
+  {
+    taskId: "PRO-015",
+    taskName: "Regulatory Compliance",
+    domain: "professionalism",
+    keywords: ["규제 준수", "regulatory", "법규", "허가", "신고"],
+    intentPatterns: ["규제 준수 현황을 확인하고 싶다", "필요한 허가를 알고 싶다"],
+  },
+  {
+    taskId: "PRO-016",
+    taskName: "Professional Certification Management",
+    domain: "professionalism",
+    keywords: ["자격증", "certification", "CMP", "CSEP", "자격 관리"],
+    intentPatterns: ["자격증 관리가 필요하다", "전문 자격을 확인하고 싶다"],
+  },
+  {
+    taskId: "PRO-017",
+    taskName: "Continuing Education Tracking",
+    domain: "professionalism",
+    keywords: ["계속 교육", "CE", "교육 이수", "학습", "보수 교육"],
+    intentPatterns: ["교육 이수 현황을 확인하고 싶다", "CE 학점이 필요하다"],
+  },
+  {
+    taskId: "PRO-018",
+    taskName: "Self-Development Planning",
+    domain: "professionalism",
+    keywords: ["자기 개발", "self-development", "성장 계획", "역량 개발"],
+    intentPatterns: ["자기 개발 계획이 필요하다", "역량 개발을 계획하고 싶다"],
+  },
+  {
+    taskId: "PRO-019",
+    taskName: "Mentorship Program",
+    domain: "professionalism",
+    keywords: ["멘토십", "mentorship", "멘토", "멘티", "코칭"],
+    intentPatterns: ["멘토십 프로그램이 필요하다", "멘토를 찾고 싶다"],
+  },
+  {
+    taskId: "PRO-020",
+    taskName: "Career Development",
+    domain: "professionalism",
+    keywords: ["경력 개발", "career development", "커리어", "승진", "경력 경로"],
+    intentPatterns: ["경력 개발 계획이 필요하다", "커리어 경로를 설계하고 싶다"],
+  },
 ];
 
 // =============================================================================
@@ -2509,7 +2937,7 @@ This system is ONLY for EVENT PLANNING and MANAGEMENT. If the question is about:
 
 You MUST return "out_of_scope" domain with taskId "NONE".
 
-## Available Agents (362 total)
+## Available Agents (422 total)
 
 ### Strategy Domain (STR-001~054) - CMP-IS Domain A: Strategic Planning
 **Skill 1: Goal Setting (STR-001~013)**
@@ -2584,6 +3012,15 @@ You MUST return "out_of_scope" domain with taskId "NONE".
 - SITE-021~030: 호텔 블록 협상, 객실 배정, 숙박 인벤토리, 숙박 예산, 인보이스, 체크인/아웃, 루밍 리스트, 교통 조율, VIP 숙박
 - SITE-031~040: 감실 관리, 숙박 커뮤니케이션, 정산, 그룹 블록, 숙박 보고, 서비스 레벨, 블록 릴리스, 컴플라이언스, 기술 통합, 비상 대응
 
+### Professionalism Domain (PRO-001~020) - CMP-IS Domain J: Professional Development
+**Skill 19: Ethics & Standards (PRO-001~010)**
+- PRO-001~005: 윤리 강령 준수, 이해충돌 관리, 선물/접대 정책, 기밀 유지, 이해충돌 신고
+- PRO-006~010: 윤리 딜레마 해결, 비리 신고(Whistleblower), 공급업체 윤리 평가, 위기 윤리 대응
+
+**Skill 20: Legal Compliance & Professional Development (PRO-011~020)**
+- PRO-011~015: 법적 리스크 검토, 계약 준수, 개인정보보호(GDPR/PIPA), 지적재산권, 규제 준수
+- PRO-016~020: 전문자격 관리(CMP/CSEP), 평생교육 학점(CE), 자기개발 계획, 멘토십 프로그램, 커리어 개발
+
 ## ROUTING RULES
 
 1. **Out-of-Scope Check FIRST**: If NOT related to event management, return out_of_scope immediately
@@ -2598,6 +3035,7 @@ You MUST return "out_of_scope" domain with taskId "NONE".
    - Questions about STAFF, RECRUITMENT, TRAINING, PAYROLL, VOLUNTEER, SCHEDULING, ATTENDANCE, ONBOARDING → HR (HR-*)
    - Questions about PROGRAM, SESSIONS, SPEAKERS, PRESENTERS, TRACKS, KEYNOTE, ABSTRACTS, CONTENT, CE/CME → Meetings (MTG-*)
    - Questions about SITE SELECTION, VENUE CONTRACT, FLOOR PLAN, SETUP, TEARDOWN, HOUSING, HOTEL BLOCKS, ROOM ALLOCATION, VIP HOUSING, TRANSPORTATION → Site (SITE-*)
+   - Questions about ETHICS, COMPLIANCE, LEGAL RISK, PRIVACY (GDPR/PIPA), INTELLECTUAL PROPERTY, CONTRACTS, CERTIFICATION (CMP/CSEP), CONTINUING EDUCATION, CAREER DEVELOPMENT, MENTORSHIP, WHISTLEBLOWER, CONFLICT OF INTEREST → Professionalism (PRO-*)
 4. **Specificity**: Choose the most specific agent that matches the intent
 5. **Confidence**: Rate your confidence from 0.0 to 1.0
 
@@ -2605,8 +3043,8 @@ You MUST return "out_of_scope" domain with taskId "NONE".
 
 You MUST respond with ONLY a valid JSON object:
 {
-  "taskId": "FIN-001 or STR-001 or PRJ-001 or MKT-001 or OPS-001 or HR-001 or MTG-001 or SITE-001 or NONE",
-  "domain": "finance" or "strategy" or "project" or "marketing" or "operations" or "hr" or "meetings" or "site" or "out_of_scope",
+  "taskId": "FIN-001 or STR-001 or PRJ-001 or MKT-001 or OPS-001 or HR-001 or MTG-001 or SITE-001 or PRO-001 or NONE",
+  "domain": "finance" or "strategy" or "project" or "marketing" or "operations" or "hr" or "meetings" or "site" or "professionalism" or "out_of_scope",
   "confidence": 0.85,
   "reasoning": "Brief explanation of why this agent was selected or why it's out of scope"
 }

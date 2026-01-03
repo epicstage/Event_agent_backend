@@ -47,6 +47,36 @@ export const Skill15Agents = [
   SITE_020,
 ];
 
+export const SKILL15_AGENTS = {
+  "SITE-001": SITE_001,
+  "SITE-002": SITE_002,
+  "SITE-003": SITE_003,
+  "SITE-004": SITE_004,
+  "SITE-005": SITE_005,
+  "SITE-006": SITE_006,
+  "SITE-007": SITE_007,
+  "SITE-008": SITE_008,
+  "SITE-009": SITE_009,
+  "SITE-010": SITE_010,
+  "SITE-011": SITE_011,
+  "SITE-012": SITE_012,
+  "SITE-013": SITE_013,
+  "SITE-014": SITE_014,
+  "SITE-015": SITE_015,
+  "SITE-016": SITE_016,
+  "SITE-017": SITE_017,
+  "SITE-018": SITE_018,
+  "SITE-019": SITE_019,
+  "SITE-020": SITE_020,
+};
+
+export const SKILL15_METADATA = {
+  skillId: "skill-15",
+  skillName: "Site Operations",
+  description: "현장 운영 - 사이트 선정, 시설 관리, 안전, 셋업/철거",
+  agentCount: 20,
+};
+
 export {
   SITE_001,
   SITE_002,
