@@ -291,6 +291,194 @@ export const DEFAULT_RULES: ConfirmationRule[] = [
     timeout_minutes: 120,
     timeout_action: "reject",
   },
+
+  // 11. High Budget Campaign (Marketing Advanced Domain)
+  {
+    id: "RULE-011",
+    name: "High Budget Campaign",
+    description: "고예산 마케팅 캠페인 (5000만원 이상)",
+    condition: (input, context) => {
+      if (!context.agent_id.startsWith("MKTADV-")) return false;
+      const budgetFields = ["campaign_budget", "total_budget", "budget_amount"];
+      for (const field of budgetFields) {
+        const value = input[field];
+        if (typeof value === "number" && value >= 50000000) return true;
+      }
+      return false;
+    },
+    change_type: "high_value",
+    risk_level: "high",
+    message_template: "고예산 마케팅 캠페인입니다 (5000만원 이상). 승인이 필요합니다.",
+    timeout_minutes: 120,
+    timeout_action: "reject",
+  },
+
+  // 12. Mass Email Campaign (Marketing Advanced Domain)
+  {
+    id: "RULE-012",
+    name: "Mass Email Campaign",
+    description: "대량 이메일 발송 (10,000명 이상)",
+    condition: (input, context) => {
+      if (!context.agent_id.startsWith("MKTADV-")) return false;
+      const recipientFields = ["recipient_count", "target_audience_size", "email_count"];
+      for (const field of recipientFields) {
+        const value = input[field];
+        if (typeof value === "number" && value >= 10000) return true;
+      }
+      return false;
+    },
+    change_type: "external_integration",
+    risk_level: "medium",
+    message_template: "대량 이메일 발송입니다 (10,000명 이상). 발송 전 승인이 필요합니다.",
+    timeout_minutes: 60,
+    timeout_action: "reject",
+  },
+
+  // 13. CRM Data Bulk Update (Marketing Advanced Domain)
+  {
+    id: "RULE-013",
+    name: "CRM Data Bulk Update",
+    description: "CRM 데이터 대량 업데이트",
+    condition: (input, context) => {
+      if (!context.agent_id.startsWith("MKTADV-")) return false;
+      const bulkKeywords = ["bulk_update", "mass_update", "batch_update"];
+      const action = String(input.action || "").toLowerCase();
+      if (bulkKeywords.some((kw) => action.includes(kw))) return true;
+      const recordCount = input.record_count || input.affected_records;
+      return typeof recordCount === "number" && recordCount >= 1000;
+    },
+    change_type: "data_deletion",
+    risk_level: "high",
+    message_template: "CRM 데이터 대량 업데이트입니다. 영향받는 레코드: 1000건 이상. 승인이 필요합니다.",
+    timeout_minutes: 60,
+    timeout_action: "reject",
+  },
+
+  // 14. Retargeting Audience Export (Marketing Advanced Domain)
+  {
+    id: "RULE-014",
+    name: "Retargeting Audience Export",
+    description: "리타겟팅 오디언스 외부 플랫폼 내보내기",
+    condition: (input, context) => {
+      if (context.agent_id !== "MKTADV-026") return false;
+      const exportKeywords = ["export", "sync_to_platform", "upload"];
+      const action = String(input.action || input.export_type || "").toLowerCase();
+      return exportKeywords.some((kw) => action.includes(kw));
+    },
+    change_type: "external_integration",
+    risk_level: "medium",
+    message_template: "리타겟팅 오디언스를 외부 광고 플랫폼으로 내보냅니다. 개인정보 규정을 확인하셨습니까?",
+    timeout_minutes: 30,
+    timeout_action: "reject",
+  },
+
+  // 15. Lead Segment Delete (Marketing Advanced Domain)
+  {
+    id: "RULE-015",
+    name: "Lead Segment Delete",
+    description: "리드 세그먼트 삭제",
+    condition: (input, context) => {
+      if (!context.agent_id.startsWith("MKTADV-")) return false;
+      const deleteKeywords = ["delete_segment", "remove_segment", "archive_segment"];
+      const action = String(input.action || "").toLowerCase();
+      return deleteKeywords.some((kw) => action.includes(kw));
+    },
+    change_type: "data_deletion",
+    risk_level: "medium",
+    message_template: "리드 세그먼트 삭제 작업입니다. 삭제 후 복구가 어려울 수 있습니다.",
+    timeout_minutes: 30,
+    timeout_action: "reject",
+  },
+
+  // ============ PROFESSIONALISM DOMAIN (PRO) - Domain J ============
+
+  // 16. Whistleblower Report (Professionalism Domain)
+  {
+    id: "RULE-016",
+    name: "Whistleblower Report",
+    description: "내부고발 또는 윤리 위반 보고",
+    condition: (input, context) => {
+      if (context.agent_id !== "PRO-009") return false;
+      const sensitiveKeywords = ["whistleblower", "ethics_violation", "misconduct", "fraud"];
+      const inputStr = JSON.stringify(input).toLowerCase();
+      return sensitiveKeywords.some((kw) => inputStr.includes(kw));
+    },
+    change_type: "policy_change",
+    risk_level: "critical",
+    message_template: "내부고발/윤리 위반 보고입니다. 민감한 정보가 포함되어 있어 승인이 필요합니다.",
+    timeout_minutes: 60,
+    timeout_action: "escalate",
+  },
+
+  // 17. Legal Risk Critical (Professionalism Domain)
+  {
+    id: "RULE-017",
+    name: "Legal Risk Critical",
+    description: "높은 법적 리스크 감지",
+    condition: (input, context) => {
+      if (!context.agent_id.startsWith("PRO-")) return false;
+      const riskLevel = String(input.risk_level || input.overall_risk_level || "").toLowerCase();
+      return riskLevel === "critical" || riskLevel === "high";
+    },
+    change_type: "high_value",
+    risk_level: "high",
+    message_template: "높은 법적 리스크가 감지되었습니다. 법무팀 검토가 필요합니다.",
+    timeout_minutes: 120,
+    timeout_action: "reject",
+  },
+
+  // 18. Privacy Data Export (Professionalism Domain)
+  {
+    id: "RULE-018",
+    name: "Privacy Data Export",
+    description: "개인정보 외부 전송",
+    condition: (input, context) => {
+      if (context.agent_id !== "PRO-013") return false;
+      const exportKeywords = ["export", "transfer", "share_external", "third_party_transfer"];
+      const action = String(input.action || "").toLowerCase();
+      return exportKeywords.some((kw) => action.includes(kw));
+    },
+    change_type: "external_integration",
+    risk_level: "high",
+    message_template: "개인정보 외부 전송 작업입니다. GDPR/개인정보보호법 준수 여부를 확인하세요.",
+    timeout_minutes: 60,
+    timeout_action: "reject",
+  },
+
+  // 19. Contract Signature (Professionalism Domain)
+  {
+    id: "RULE-019",
+    name: "Contract Signature",
+    description: "계약 서명 또는 법적 구속력 있는 문서 제출",
+    condition: (input, context) => {
+      if (context.agent_id !== "PRO-012") return false;
+      const signKeywords = ["sign", "execute", "finalize", "submit_legal"];
+      const action = String(input.action || input.compliance_status || "").toLowerCase();
+      return signKeywords.some((kw) => action.includes(kw));
+    },
+    change_type: "irreversible",
+    risk_level: "critical",
+    message_template: "계약 서명/법적 문서 제출 작업입니다. 법적 구속력이 발생합니다. 진행하시겠습니까?",
+    timeout_minutes: 120,
+    timeout_action: "reject",
+  },
+
+  // 20. Conflict of Interest Declaration (Professionalism Domain)
+  {
+    id: "RULE-020",
+    name: "Conflict of Interest Declaration",
+    description: "이해충돌 선언 또는 고위험 COI 감지",
+    condition: (input, context) => {
+      if (context.agent_id !== "PRO-007") return false;
+      const coiRiskLevel = String(input.coi_risk_level || "").toLowerCase();
+      return coiRiskLevel === "high" || coiRiskLevel === "critical";
+    },
+    change_type: "policy_change",
+    risk_level: "high",
+    message_template: "고위험 이해충돌이 감지되었습니다. 윤리위원회 검토가 필요합니다.",
+    timeout_minutes: 60,
+    timeout_action: "escalate",
+  },
 ];
 
 // =============================================================================

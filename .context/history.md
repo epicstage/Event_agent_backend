@@ -1,5 +1,80 @@
 # 작업 이력
 
+## 2026-01-03: v0.9.1 Emergency Mission 완료 - 442개 에이전트
+
+### 수행 작업
+1. **Router AGENT_CATALOG 30개 FIN 에이전트 추가**
+   - FIN-004, 007-015, 018-021, 023-025, 028, 039-040, 042, 047, 049-051, 053, 055, 059, 061, 063
+   - 도메인별 카운트: STR(54) + FIN(68) + PRJ(40) + MKT(40) + OPS(40) + HR(40) + MTG(40) + SITE(40) + MKTADV(40) + PRO(20) = **442개**
+
+2. **ContextBridge 3개 도메인 추가**
+   - `SiteContext` 인터페이스 정의 (Domain H)
+   - `MarketingAdvContext` 인터페이스 정의 (Domain I)
+   - `ProfessionalismContext` 인터페이스 정의 (Domain J)
+   - `SharedContext`에 3개 필드 추가
+   - `CrossDomainAlert` 도메인 타입 확장
+
+3. **validateDomain() 4개 도메인 추가**
+   - meetings, site, marketing_adv, professionalism
+
+4. **invalidateCache 타입 확장**
+   - SITE, MKTADV, PRO 추가
+
+### 배포 정보
+- Version: 0.9.1 (Integrity Fixed)
+- Version ID: 23d39beb-4dc9-4bf4-86e6-50e76b685483
+- URL: https://event-agent-api.pd-302.workers.dev
+- 총 에이전트: **442개**
+
+### 검증 결과
+- `/finance/agents` → 68개 확인 (기존 38개 → 68개)
+- Router 헤더: 442개로 업데이트
+
+---
+
+## 2026-01-03: v0.9.0 UI-Backend 정합성 진단 완료
+
+### 수행 작업
+1. **Lovable Frontend 분석** (github.com/epicstage/event-finance-hub)
+   - 128개 TSX 컴포넌트 확인
+   - API 서비스 및 타입 정의 분석
+
+2. **Field Naming 검증**
+   - UI: snake_case (event_id, unit_cost, projected_amount)
+   - Backend: snake_case (동일)
+   - **결과: 100% 일치** - camelCase/snake_case 불일치 없음
+
+3. **Agent Routing 검증**
+   - Router 등록: 400개
+   - 실제 파일: 446개
+   - **GAP: 46개 에이전트 누락** (FIN 30개 + 기타)
+
+4. **Migrations 011-013 검증**
+   - 011: Site Management (6 tables) - OK
+   - 012: Advanced Marketing (6 tables) - OK
+   - 013: Professionalism (6 tables) - OK
+
+### Critical Issues 발견
+1. **30개 FIN 에이전트 Router 누락**
+   - FIN-004, 007-015, 018-021, 023-025, 028, 039-040, 042, 047, 049-051, 053, 055, 059, 061, 063
+
+2. **FIN-031 중복 등록**
+
+3. **Router 헤더 코멘트 오류**
+   - 주석: 422개
+   - 실제 계산: 442개
+   - CATALOG: 400개
+
+### 생성 파일
+- `system_integrity_report.md`
+
+### 다음 작업
+- Router에 누락된 30개 FIN 에이전트 추가
+- FIN-031 중복 제거
+- Context Bridge에 SITE/MKTADV/PRO 로더 추가
+
+---
+
 ## 2026-01-03: Domain J Professionalism 20개 에이전트 배포 (v0.9.0)
 
 ### 완료된 작업
@@ -1025,3 +1100,54 @@
 - [2026-01-03 22:36:15] Edit: registry.ts
 - [2026-01-03 22:43:54] Write: current.md
 - [2026-01-03 22:44:43] Edit: history.md
+- [2026-01-03 23:09:03] Write: debug_report.md
+- [2026-01-03 23:38:49] Write: system_integrity_report.md
+- [2026-01-03 23:40:04] Edit: history.md
+- [2026-01-03 23:50:32] Edit: router.ts
+- [2026-01-03 23:51:07] Edit: router.ts
+- [2026-01-03 23:51:37] Edit: router.ts
+- [2026-01-03 23:52:03] Edit: router.ts
+- [2026-01-03 23:52:29] Edit: router.ts
+- [2026-01-03 23:53:17] Edit: router.ts
+- [2026-01-03 23:53:42] Edit: router.ts
+- [2026-01-03 23:57:03] Edit: router.ts
+- [2026-01-03 23:57:29] Edit: router.ts
+- [2026-01-03 23:57:52] Edit: router.ts
+- [2026-01-03 23:58:40] Edit: router.ts
+- [2026-01-03 23:59:23] Edit: router.ts
+- [2026-01-04 00:00:10] Edit: router.ts
+- [2026-01-04 00:00:55] Edit: router.ts
+- [2026-01-04 00:04:34] Edit: router.ts
+- [2026-01-04 00:07:45] Edit: context_bridge.ts
+- [2026-01-04 00:09:07] Edit: context_bridge.ts
+- [2026-01-04 00:09:52] Edit: context_bridge.ts
+- [2026-01-04 00:10:28] Edit: context_bridge.ts
+- [2026-01-04 00:11:42] Edit: router.ts
+- [2026-01-04 00:16:39] Edit: history.md
+- [2026-01-04 00:33:30] Write: Home.tsx
+- [2026-01-04 00:34:25] Write: CommandCenter.tsx
+- [2026-01-04 00:42:59] Write: DomainGrid.tsx
+- [2026-01-04 00:43:47] Write: OmniSearch.tsx
+- [2026-01-04 00:44:21] Write: StatusBanner.tsx
+- [2026-01-04 00:45:41] Write: GuardianGate.tsx
+- [2026-01-04 00:47:14] Write: CMPProgressBar.tsx
+- [2026-01-04 00:47:37] Write: index.ts
+- [2026-01-04 00:50:17] Edit: App.tsx
+- [2026-01-04 00:51:21] Edit: App.tsx
+- [2026-01-04 00:51:45] Edit: DomainGrid.tsx
+- [2026-01-04 01:00:33] Edit: OmniSearch.tsx
+- [2026-01-04 01:01:44] Edit: OmniSearch.tsx
+- [2026-01-05 02:00:48] Edit: DomainGrid.tsx
+- [2026-01-05 02:01:29] Edit: DomainGrid.tsx
+- [2026-01-05 02:01:53] Edit: DomainGrid.tsx
+- [2026-01-05 02:02:17] Edit: DomainGrid.tsx
+- [2026-01-05 02:02:41] Edit: CommandCenter.tsx
+- [2026-01-05 02:06:07] Write: SalesDashboard.tsx
+- [2026-01-05 02:06:22] Write: SettlementDashboard.tsx
+- [2026-01-05 02:06:37] Write: SolutionDashboard.tsx
+- [2026-01-05 02:07:01] Write: Sales.tsx
+- [2026-01-05 02:07:16] Write: Settlement.tsx
+- [2026-01-05 02:07:32] Write: Solution.tsx
+- [2026-01-05 02:08:22] Edit: App.tsx
+- [2026-01-05 02:09:24] Edit: App.tsx
+- [2026-01-05 02:21:05] Write: current.md

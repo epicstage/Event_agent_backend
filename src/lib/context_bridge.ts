@@ -376,6 +376,111 @@ export interface MeetingsContext {
   updated_at: string;
 }
 
+// Domain H: Site Management
+export interface SiteContext {
+  event_id: string;
+  hotel_blocks: {
+    total_rooms_blocked: number;
+    rooms_picked_up: number;
+    rooms_remaining: number;
+    pickup_rate: number;
+    cutoff_date: string | null;
+    attrition_risk: number;
+  };
+  site_inspections: {
+    completed: number;
+    pending: number;
+    issues_found: number;
+    critical_issues: number;
+  };
+  facility_inventory: {
+    total_items: number;
+    checked_out: number;
+    available: number;
+    maintenance_needed: number;
+  };
+  setup_tasks: {
+    total_tasks: number;
+    completed: number;
+    in_progress: number;
+    blocked: number;
+  };
+  housing_invoices: {
+    total_amount: number;
+    paid: number;
+    pending: number;
+  };
+  updated_at: string;
+}
+
+// Domain I: Advanced Marketing
+export interface MarketingAdvContext {
+  event_id: string;
+  analytics: {
+    total_impressions: number;
+    total_clicks: number;
+    conversion_rate: number;
+    cost_per_acquisition: number;
+  };
+  lead_segments: {
+    total_leads: number;
+    hot_leads: number;
+    warm_leads: number;
+    cold_leads: number;
+    conversion_by_segment: Record<string, number>;
+  };
+  campaign_performance: {
+    active_campaigns: number;
+    total_spend: number;
+    total_revenue_attributed: number;
+    roas: number;
+  };
+  personalization: {
+    rules_active: number;
+    personalized_content_served: number;
+    engagement_lift: number;
+  };
+  retargeting: {
+    audience_size: number;
+    campaigns_running: number;
+    conversion_rate: number;
+  };
+  updated_at: string;
+}
+
+// Domain J: Professionalism
+export interface ProfessionalismContext {
+  event_id: string;
+  compliance: {
+    audits_completed: number;
+    audits_pending: number;
+    issues_found: number;
+    issues_resolved: number;
+  };
+  certifications: {
+    required: number;
+    obtained: number;
+    expiring_soon: number;
+  };
+  training: {
+    courses_required: number;
+    courses_completed: number;
+    staff_certified: number;
+    staff_pending: number;
+  };
+  legal_risk: {
+    assessments_done: number;
+    high_risk_items: number;
+    mitigated: number;
+  };
+  industry_standards: {
+    standards_tracked: number;
+    compliant: number;
+    non_compliant: number;
+  };
+  updated_at: string;
+}
+
 export interface SharedContext {
   event_id: string;
   strategy: StrategyContext | null;
@@ -385,6 +490,9 @@ export interface SharedContext {
   operations: OperationsContext | null;
   hr: HRContext | null;
   meetings: MeetingsContext | null;
+  site: SiteContext | null;
+  marketing_adv: MarketingAdvContext | null;
+  professionalism: ProfessionalismContext | null;
   cross_domain_alerts: CrossDomainAlert[];
   last_sync: string;
 }
@@ -393,8 +501,8 @@ export interface CrossDomainAlert {
   id: string;
   type: "budget_impact" | "schedule_risk" | "stakeholder_concern" | "resource_constraint" | "goal_at_risk" | "marketing_risk" | "registration_lag" | "channel_underperformance" | "venue_risk" | "logistics_issue" | "safety_concern" | "vendor_delay" | "staffing_shortage" | "labor_cost_overrun" | "training_gap" | "compliance_issue" | "speaker_shortage" | "content_delay" | "program_conflict" | "abstract_review_backlog" | "ce_accreditation_risk";
   severity: "critical" | "high" | "medium" | "low";
-  source_domain: "STR" | "FIN" | "PRJ" | "MKT" | "OPS" | "HR" | "MTG";
-  affected_domains: Array<"STR" | "FIN" | "PRJ" | "MKT" | "OPS" | "HR" | "MTG">;
+  source_domain: "STR" | "FIN" | "PRJ" | "MKT" | "OPS" | "HR" | "MTG" | "SITE" | "MKTADV" | "PRO";
+  affected_domains: Array<"STR" | "FIN" | "PRJ" | "MKT" | "OPS" | "HR" | "MTG" | "SITE" | "MKTADV" | "PRO">;
   title: string;
   description: string;
   recommended_actions: string[];
@@ -1207,7 +1315,7 @@ export class ContextBridge {
   /**
    * 도메인 컨텍스트 업데이트 (캐시 무효화)
    */
-  async invalidateCache(eventId: string, domain?: "STR" | "FIN" | "PRJ" | "MKT" | "OPS" | "HR" | "MTG"): Promise<void> {
+  async invalidateCache(eventId: string, domain?: "STR" | "FIN" | "PRJ" | "MKT" | "OPS" | "HR" | "MTG" | "SITE" | "MKTADV" | "PRO"): Promise<void> {
     const cacheKey = `shared_context:${eventId}`;
     await this.kv.delete(cacheKey);
 

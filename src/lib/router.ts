@@ -4,7 +4,7 @@
  * Cloudflare Workers AI를 사용한 지능형 에이전트 라우터.
  * - 사용자 질문을 분석하여 가장 적합한 에이전트 선택
  * - Intent 기반 라우팅 (키워드 매칭 아님)
- * - STR-001~054 (54개) + PRJ-001~040 (40개) + MKT-001~040 (40개) + FIN-001~068 (68개) + OPS-001~040 (40개) + HR-001~040 (40개) + MTG-001~040 (40개) + SITE-001~040 (40개) + MKTADV-001~040 (40개) + PRO-001~020 (20개) = 총 422개 에이전트 지원
+ * - STR-001~054 (54개) + FIN-001~068 (68개) + PRJ-001~040 (40개) + MKT-001~040 (40개) + OPS-001~040 (40개) + HR-001~040 (40개) + MTG-001~040 (40개) + SITE-001~040 (40개) + MKTADV-001~040 (40개) + PRO-001~020 (20개) = 총 442개 에이전트 지원
  */
 
 // =============================================================================
@@ -489,6 +489,13 @@ const AGENT_CATALOG: AgentMetadata[] = [
     intentPatterns: ["스폰서십 승인을 받고 싶다", "승인 프로세스가 필요하다"],
   },
   {
+    taskId: "FIN-004",
+    taskName: "스폰서십 법적 검토 요청",
+    domain: "finance",
+    keywords: ["법적", "검토", "legal", "계약", "검수", "리뷰"],
+    intentPatterns: ["계약서 법적 검토가 필요하다", "법무팀 검토 요청"],
+  },
+  {
     taskId: "FIN-005",
     taskName: "잠재 스폰서 후보 식별",
     domain: "finance",
@@ -501,6 +508,69 @@ const AGENT_CATALOG: AgentMetadata[] = [
     domain: "finance",
     keywords: ["스폰서", "적합", "분석", "fit", "매칭"],
     intentPatterns: ["이 스폰서가 적합한가", "스폰서 매칭 분석"],
+  },
+  {
+    taskId: "FIN-007",
+    taskName: "스폰서 독점권 충돌 검사",
+    domain: "finance",
+    keywords: ["독점", "배타", "exclusivity", "충돌", "경쟁"],
+    intentPatterns: ["독점권 충돌이 있나", "배타적 조항 검토"],
+  },
+  {
+    taskId: "FIN-008",
+    taskName: "스폰서 혜택 패키지 문서 생성",
+    domain: "finance",
+    keywords: ["제안서", "proposal", "패키지", "문서", "PDF"],
+    intentPatterns: ["스폰서 제안서를 만들고 싶다", "패키지 문서 생성"],
+  },
+  {
+    taskId: "FIN-009",
+    taskName: "스폰서 제안서 배포",
+    domain: "finance",
+    keywords: ["배포", "발송", "distribution", "전달", "이메일"],
+    intentPatterns: ["제안서를 보내고 싶다", "스폰서에게 제안서 배포"],
+  },
+  {
+    taskId: "FIN-010",
+    taskName: "잠재 스폰서 1차 접촉",
+    domain: "finance",
+    keywords: ["접촉", "연락", "contact", "미팅", "콜드콜"],
+    intentPatterns: ["스폰서에게 연락하고 싶다", "1차 미팅 잡기"],
+  },
+  {
+    taskId: "FIN-011",
+    taskName: "스폰서 지원 유형 파악",
+    domain: "finance",
+    keywords: ["지원", "현금", "현물", "in-kind", "타입"],
+    intentPatterns: ["어떤 지원을 받을 수 있나", "현금 vs 현물 지원"],
+  },
+  {
+    taskId: "FIN-012",
+    taskName: "스폰서 커밋먼트 협상",
+    domain: "finance",
+    keywords: ["협상", "커밋", "약정", "negotiation", "조건"],
+    intentPatterns: ["스폰서와 협상하고 싶다", "후원 조건 협상"],
+  },
+  {
+    taskId: "FIN-013",
+    taskName: "스폰서 계약서 초안 작성",
+    domain: "finance",
+    keywords: ["계약서", "초안", "draft", "작성", "문서화"],
+    intentPatterns: ["계약서를 작성하고 싶다", "스폰서 계약 초안"],
+  },
+  {
+    taskId: "FIN-014",
+    taskName: "스폰서 관계 유지",
+    domain: "finance",
+    keywords: ["관계", "유지", "relationship", "뉴스레터", "업데이트"],
+    intentPatterns: ["스폰서와 관계 유지", "정기 업데이트 보내기"],
+  },
+  {
+    taskId: "FIN-015",
+    taskName: "스폰서 계약 이행 추적",
+    domain: "finance",
+    keywords: ["이행", "추적", "fulfillment", "모니터링", "진행"],
+    intentPatterns: ["계약 이행 상황 확인", "혜택 제공 추적"],
   },
   {
     taskId: "FIN-016",
@@ -517,11 +587,60 @@ const AGENT_CATALOG: AgentMetadata[] = [
     intentPatterns: ["등록 수익 목표를 설정하고 싶다", "참가비 수익 목표"],
   },
   {
+    taskId: "FIN-018",
+    taskName: "과거 등록 리스트 분석",
+    domain: "finance",
+    keywords: ["과거", "등록", "분석", "historical", "registration"],
+    intentPatterns: ["이전 등록 데이터 분석", "과거 참가자 패턴"],
+  },
+  {
+    taskId: "FIN-019",
+    taskName: "잠재 참석자 유형 식별",
+    domain: "finance",
+    keywords: ["참석자", "유형", "세그먼트", "segment", "타입"],
+    intentPatterns: ["참석자 유형을 파악하고 싶다", "대상 세그먼트 분석"],
+  },
+  {
+    taskId: "FIN-020",
+    taskName: "등록 사전 안내 패킷 생성",
+    domain: "finance",
+    keywords: ["등록", "패킷", "안내", "정보", "packet"],
+    intentPatterns: ["등록 안내 문서 만들기", "사전 정보 패킷"],
+  },
+  {
+    taskId: "FIN-021",
+    taskName: "등록 시스템 공급자 식별",
+    domain: "finance",
+    keywords: ["등록", "시스템", "vendor", "플랫폼", "공급자"],
+    intentPatterns: ["등록 시스템을 찾고 싶다", "플랫폼 비교"],
+  },
+  {
     taskId: "FIN-022",
     taskName: "전시 잠재 고객 식별",
     domain: "finance",
     keywords: ["전시", "전시사", "exhibitor", "부스", "booth"],
     intentPatterns: ["전시사를 찾고 싶다", "부스 판매 대상"],
+  },
+  {
+    taskId: "FIN-023",
+    taskName: "전시 패키지 개발",
+    domain: "finance",
+    keywords: ["전시", "패키지", "booth", "부스", "가격"],
+    intentPatterns: ["부스 패키지를 만들고 싶다", "전시 가격 책정"],
+  },
+  {
+    taskId: "FIN-024",
+    taskName: "전시 판매 진행 추적",
+    domain: "finance",
+    keywords: ["전시", "판매", "추적", "파이프라인", "진행"],
+    intentPatterns: ["부스 판매 현황", "전시 영업 추적"],
+  },
+  {
+    taskId: "FIN-025",
+    taskName: "전시사 계약 관리",
+    domain: "finance",
+    keywords: ["전시사", "계약", "관리", "contract", "exhibitor"],
+    intentPatterns: ["전시사 계약 관리", "부스 계약서"],
   },
   {
     taskId: "FIN-026",
@@ -536,6 +655,13 @@ const AGENT_CATALOG: AgentMetadata[] = [
     domain: "finance",
     keywords: ["수익원", "추가", "다각화", "additional", "revenue stream"],
     intentPatterns: ["추가 수익을 만들고 싶다", "다른 수익원이 뭐가 있나"],
+  },
+  {
+    taskId: "FIN-028",
+    taskName: "상품 판매 기획",
+    domain: "finance",
+    keywords: ["상품", "굿즈", "merchandise", "판매", "MD"],
+    intentPatterns: ["이벤트 굿즈를 팔고 싶다", "상품 판매 기획"],
   },
   {
     taskId: "FIN-029",
@@ -610,11 +736,32 @@ const AGENT_CATALOG: AgentMetadata[] = [
     intentPatterns: ["현금 흐름이 어떻게 되나", "자금 필요 시점"],
   },
   {
+    taskId: "FIN-039",
+    taskName: "예산 승인 프로세스",
+    domain: "finance",
+    keywords: ["승인", "결재", "approval", "프로세스", "워크플로우"],
+    intentPatterns: ["예산 승인을 받고 싶다", "결재 프로세스 진행"],
+  },
+  {
+    taskId: "FIN-040",
+    taskName: "예산 문서화",
+    domain: "finance",
+    keywords: ["문서화", "documentation", "기록", "보고서", "정리"],
+    intentPatterns: ["예산 문서를 정리하고 싶다", "예산 보고서 작성"],
+  },
+  {
     taskId: "FIN-041",
     taskName: "시나리오 플래닝",
     domain: "finance",
     keywords: ["시나리오", "scenario", "최악", "최선", "가정"],
     intentPatterns: ["다양한 시나리오를 보고 싶다", "최악의 경우 예산"],
+  },
+  {
+    taskId: "FIN-042",
+    taskName: "예산 커뮤니케이션",
+    domain: "finance",
+    keywords: ["커뮤니케이션", "전달", "공유", "보고", "stakeholder"],
+    intentPatterns: ["예산을 팀에 공유하고 싶다", "예산 현황 전달"],
   },
   {
     taskId: "FIN-043",
@@ -645,11 +792,39 @@ const AGENT_CATALOG: AgentMetadata[] = [
     intentPatterns: ["가격을 동적으로 조정하고 싶다", "수요에 따른 가격"],
   },
   {
+    taskId: "FIN-047",
+    taskName: "가격 포인트 검증",
+    domain: "finance",
+    keywords: ["가격", "검증", "validation", "테스트", "시장조사", "지불의향"],
+    intentPatterns: ["가격이 적정한지 검증하고 싶다", "가격 테스트가 필요하다"],
+  },
+  {
     taskId: "FIN-048",
     taskName: "환불 정책 생성",
     domain: "finance",
     keywords: ["환불", "취소", "refund", "cancellation"],
     intentPatterns: ["환불 정책이 필요하다", "취소 시 환불 규정"],
+  },
+  {
+    taskId: "FIN-049",
+    taskName: "결제 조건 설계",
+    domain: "finance",
+    keywords: ["결제", "조건", "payment terms", "분할", "할부"],
+    intentPatterns: ["결제 조건을 설계하고 싶다", "분할 결제 옵션"],
+  },
+  {
+    taskId: "FIN-050",
+    taskName: "가격 커뮤니케이션",
+    domain: "finance",
+    keywords: ["가격", "커뮤니케이션", "안내", "메시지", "전달"],
+    intentPatterns: ["가격을 어떻게 안내할까", "가격 정보 전달"],
+  },
+  {
+    taskId: "FIN-051",
+    taskName: "예산 추적 설정",
+    domain: "finance",
+    keywords: ["추적", "tracking", "모니터링", "설정", "시스템"],
+    intentPatterns: ["예산 추적 시스템이 필요하다", "지출 모니터링 설정"],
   },
   {
     taskId: "FIN-052",
@@ -659,11 +834,25 @@ const AGENT_CATALOG: AgentMetadata[] = [
     intentPatterns: ["예산 대비 실제 지출이 어떤가", "차이 분석"],
   },
   {
+    taskId: "FIN-053",
+    taskName: "차이 보고",
+    domain: "finance",
+    keywords: ["차이", "variance", "보고서", "리포트", "report"],
+    intentPatterns: ["예산 차이 보고서가 필요하다", "variance report 작성"],
+  },
+  {
     taskId: "FIN-054",
     taskName: "예산 재배분",
     domain: "finance",
     keywords: ["재배분", "조정", "reallocation", "이동"],
     intentPatterns: ["예산을 다시 배분하고 싶다", "항목 간 이동"],
+  },
+  {
+    taskId: "FIN-055",
+    taskName: "예측 업데이트",
+    domain: "finance",
+    keywords: ["예측", "forecast", "업데이트", "수정", "전망"],
+    intentPatterns: ["예산 예측을 업데이트하고 싶다", "forecast 수정"],
   },
   {
     taskId: "FIN-056",
@@ -689,6 +878,13 @@ const AGENT_CATALOG: AgentMetadata[] = [
     intentPatterns: ["결제 시스템을 설정하고 싶다", "온라인 결제 방법"],
   },
   {
+    taskId: "FIN-059",
+    taskName: "현금 취급 절차",
+    domain: "finance",
+    keywords: ["현금", "cash", "취급", "handling", "정산"],
+    intentPatterns: ["현금 관리 절차가 필요하다", "cash handling 프로세스"],
+  },
+  {
     taskId: "FIN-060",
     taskName: "환불 정책 구현",
     domain: "finance",
@@ -696,11 +892,25 @@ const AGENT_CATALOG: AgentMetadata[] = [
     intentPatterns: ["환불을 처리하고 싶다", "환불 시스템 구축"],
   },
   {
+    taskId: "FIN-061",
+    taskName: "재무 통제 설정",
+    domain: "finance",
+    keywords: ["통제", "control", "내부통제", "승인", "권한"],
+    intentPatterns: ["재무 통제를 설정하고 싶다", "승인 권한 체계"],
+  },
+  {
     taskId: "FIN-062",
     taskName: "세금 준수 설정",
     domain: "finance",
     keywords: ["세금", "tax", "VAT", "부가세", "compliance"],
     intentPatterns: ["세금 처리가 필요하다", "부가세 설정"],
+  },
+  {
+    taskId: "FIN-063",
+    taskName: "감사 추적 구성",
+    domain: "finance",
+    keywords: ["감사", "audit", "추적", "trail", "로그", "기록"],
+    intentPatterns: ["감사 추적이 필요하다", "audit trail 설정"],
   },
   {
     taskId: "FIN-064",
@@ -3480,8 +3690,8 @@ Create an execution plan with 2-5 steps to answer this complex question.`;
   /**
    * 도메인 값 검증
    */
-  private validateDomain(domain: unknown): "finance" | "strategy" | "project" | "marketing" | "operations" | "hr" {
-    const validDomains = ["finance", "strategy", "project", "marketing", "operations", "hr"] as const;
+  private validateDomain(domain: unknown): "finance" | "strategy" | "project" | "marketing" | "marketing_adv" | "operations" | "hr" | "meetings" | "site" | "professionalism" {
+    const validDomains = ["finance", "strategy", "project", "marketing", "marketing_adv", "operations", "hr", "meetings", "site", "professionalism"] as const;
     if (typeof domain === "string" && validDomains.includes(domain as typeof validDomains[number])) {
       return domain as typeof validDomains[number];
     }
